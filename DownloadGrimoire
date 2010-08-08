@@ -1,0 +1,267 @@
+#!/bin/bash
+#
+# summonsection v1.5
+#
+# This file is GPL
+#
+# 2002-05-17 M.L. <m.l@compaqnet.fr>
+# 2009-04-28 Bor Kraljič <pyrobor@ver.si>
+
+
+
+# let's get sorcery goodies
+. /etc/sorcery/config
+
+# to get basic info for mail
+. /etc/sorcery/local/guruinfo
+
+
+
+# no more deleting pid if we ctrl-c :)
+trap "message '${PROBLEM_COLOR}ctrl-c exiting...'; safe_exit 1" INT
+
+# vars used. most of them configured with params from cmd
+email="$GURU_EMAIL"
+grimoire=""
+section=""
+check_download="no"
+check_website="no"
+# editable
+quillrc="/home/bor/.sourcemage/quill/quillrc"
+
+# not conigurable from cmd line
+curl_params="-A 'Mozilla/5.0' -m 30 --connect-timeout 30 --retry 2 --retry-delay 5 -L -f -s"
+
+usage="${MESSAGE_COLOR}Usage: ${SPELL_COLOR}$0 ${MESSAGE_COLOR}PARAMS -g|-s  ${FILE_COLOR}<grimoire>|<section>
+${MESSAGE_COLOR}-m \t\t\t send email to $email with report,
+-e|--email \t\t set email to sent report
+-s|--sections\t\t <section>
+-g|--grimoire\t\t <grimoire>
+-q|--quillrc \t\t <path to quilrc>
+-d|--check-downloads\t Check if download sources works
+-w|--check-websites\t Check if website is ok"
+
+## functions
+
+function safe_exit() {
+  local exit_code=$1
+  rm /tmp/$(basename $0).pid
+  exit $exit_code
+}
+
+
+
+function download_section() {
+local download_section spell rv sectionlist source_file
+download_section=$1
+sectionlist="$(find $download_section -mindepth 1 -maxdepth 1 -type d -printf '%f ')"
+
+message "${MESSAGE_COLOR}Working on ${FILE_COLOR}"
+message "$(basename $download_section)${MESSAGE_COLOR}:"
+message "${SPELL_COLOR}$sectionlist"
+message "${DEFAULT_COLOR}"
+
+for spell in $sectionlist; do
+  codex_set_current_spell_by_name $spell
+          # summoning could take time. so time would be useful
+  message -n "${MESSAGE_COLOR}[$(date +%T)] Moving ${SPELL_COLOR}$spell "
+  message -n "${MESSAGE_COLOR}source archive to /tmp..."
+  for source_file in $(sources $spell); do
+    [[ -f "/var/spool/sorcery/$source_file" ]] && mv /var/spool/sorcery/$source_file /tmp/
+  done
+  message -n "${MESSAGE_COLOR}\t Summoning...\t${DEFAULT_COLOR}"
+  set_term_title "summoning $spell"
+  summon  $spell 1>/dev/null 2>&1
+  rv=$?
+  if [ "$rv" != "0" ]; then
+##########################
+#    [[ ! -e "$$.$(basename $download_section).failed" ]] &&
+#    message  "$(basename $download_section):" >> "/tmp/$$.$(basename $download_section).failed"
+#    message -n "$spell" >> $$.$(basename $download_section).failed
+#    message -n " - $(sources $spell)" >> $$.$(basename $download_section).failed
+#    message -n " - $VERSION" >> $$.$(basename $download_section).failed
+#    message -n " - $WEB_SITE" >> $$.$(basename $download_section).failed
+#    message -n " - $(source_urls $spell)" >> $$.$(basename $download_section).failed
+#    message >> $$.$(basename $download_section).failed
+    # WIKI ready line
+    message "|| $spell: $(sources $spell) || $WEB_SITE || || || || ||" >> "/tmp/$$.$(basename $download_section).failed"
+##########################
+    message "${PROBLEM_COLOR}failed.${DEFAULT_COLOR}"
+#     set -x
+    # lets move sources back if we have them.
+    for source_file in $(sources $spell); do
+      [[ -f "/tmp/$source_file" ]] && mv /tmp/$source_file /var/spool/sorcery/ 
+    done
+  else
+     message "${MESSAGE_COLOR}done.${DEFAULT_COLOR}"
+     # we downloaded successfully we dont need source in /tmp
+     for source_file in $(sources $spell); do
+       [[ -f "/tmp/$source_file" ]] && rm /tmp/$source_file 1>/dev/null 2>&1
+     done
+  fi
+  unset_details
+done
+
+message "${MESSAGE_COLOR}done."
+message "${DEFAULT_COLOR}"
+
+}
+
+function check_web_site() {
+  local checking_url rv redirected_url
+  checking_url="$1"
+#   this won't work? or will?
+#   function rm_and_return() {
+#      local rc=$1
+#      [[ -e "/tmp/cws.tmp" ]] && rm /tmp/cws.tmp
+#      return 1
+#   }
+
+  if [[ "$checking_url" == "" ]]; then
+    return 1
+  fi
+  
+ curl $curl_params -o "/tmp/cws.tmp" $checking_url
+ rv=$?
+ if [[ $rv != 0 ]]; then
+#   rm /tmp/cws.tmp
+   return 1
+ 
+ elif [[ ! -e "/tmp/cws.tmp" ]]; then
+   return 0
+ elif grep -E "<(title|TITLE)>.*(N|n)ot (F|f)ound.*</(title|TITLE)>" /tmp/cws.tmp > /dev/null ;then
+   rm /tmp/cws.tmp
+   return 1
+ elif  grep -E  "<(h|H).*>.*(N|n)ot (F|f)ound.*</(h|H).?>" /tmp/cws.tmp > /dev/null  ;then
+   rm /tmp/cws.tmp
+   return 1
+ elif  grep -E  "<(h|H).*>.*(N|n)ot (b|B)e (F|f)ound.*</(h|H).?>" /tmp/cws.tmp > /dev/null  ;then
+   rm /tmp/cws.tmp
+   return 1
+ else
+   rm /tmp/cws.tmp
+   return 0
+ fi
+
+}
+
+function check_section() {
+local spell download_section sectionlist
+download_section=$1
+sectionlist="$(find $download_section -mindepth 1 -maxdepth 1 -type d -printf '%f ')"
+
+message -n "${MESSAGE_COLOR}Checking websites in ${FILE_COLOR}"
+message "$(basename $download_section)${MESSAGE_COLOR}:"
+message "${SPELL_COLOR}$sectionlist"
+message "${DEFAULT_COLOR}"
+
+for spell in $sectionlist; do
+  message -n "${MESSAGE_COLOR}Checking ${SPELL_COLOR}$spell ${MESSAGE_COLOR}for working website... \t${DEFAULT_COLOR}"
+  set_term_title "Checking $spell"
+  codex_set_current_spell_by_name $spell
+  if ! check_web_site $WEB_SITE ; then
+##########################
+#       [[ ! -e "$$.$(basename $download_section).failed" ]] && message  "$(basename $download_section):" >> "/tmp/$$.$(basename $download_section).failed"
+#     message -n "$spell" >> $$.$(basename $download_section).failed
+#    message -n " - $(sources $spell)" >> $$.$(basename $download_section).failed
+#    message -n " - $VERSION" >> $$.$(basename $download_section).failed
+#     message -n " - $WEB_SITE" >> $$.$(basename $download_section).failed
+#    message -n " - $(source_urls $spell)" >> $$.$(basename $download_section).failed
+#    message >> $$.$(basename $download_section).failed
+    # WIKI ready line
+    message "|| $spell || $WEB_SITE || || || || ||" >> $$.$(basename $download_section).failed
+##########################
+    message "${PROBLEM_COLOR}failed.${DEFAULT_COLOR}"
+  else
+    message "${MESSAGE_COLOR}done.${DEFAULT_COLOR}"
+  fi
+  unset_details
+done
+
+message "${MESSAGE_COLOR}done."
+message "${DEFAULT_COLOR}"
+
+}
+
+## End of functions
+
+## Real processing starts here 
+
+# check if script is allready running
+# do we need that ? for summon is probably a good idea so we don't use all bw..
+if [ -e /tmp/$(basename $0).pid ]; then
+  message "${PROBLEM_COLOR}pid file found. ${SPELL_COLOR}$0${MESSAGE_COLOR}allready running. Exiting...${DEFAULT_COLOR}"
+  exit 1
+else
+  echo $$ > /tmp/$(basename $0).pid
+fi
+
+# process the params
+while [[ "$1" == -* ]] # 2) params
+  do
+  case "$1" in
+     "-m")               email_report="yes";     shift  ;;
+     "-d"|"--check-downloads") check_download="yes"; shift ;;
+     "-w"|"--check-websites") check_website="yes";  shift ;;
+     "-s"|"--sections")   codex_find_section_by_name $2 section;      shift 2;;
+     "-g"|"--grimoire")  grimoire=$(codex_find_grimoire $2);          shift 2;;
+     "-e"|"--email")     email_report="yes";email=$2;  shift 2;;
+     "-q"|"--quillrc")   quillrc=$2;  shift 2;;
+     "-h"|"--help"|*) message "$usage" && safe_exit 0  ;;
+  esac
+done
+
+# basicly we need git_dir and FM apie
+#we will get it from quillrc
+. "$quillrc"
+
+
+# do we have anything to do:)
+if [[ $grimoire == "" ]] && [[ $section == "" ]]; then
+  message "${PROBLEM_COLOR}nothing chosen. please specify -g or -s${DEFAULT_COLOR}"
+  safe_exit 1
+elif [[ $grimoire != "" ]] && [[ $section != "" ]]; then
+  message "${PROBLEM_COLOR}grimoire OR selection${DEFAULT_COLOR}"
+  safe_exit 1
+fi
+
+if [[ $email == "" ]]; then
+  email_report="no"
+fi
+
+# we do. lets start work:
+cd /tmp
+if [[ -d $section ]]; then
+  [[ $check_download == "yes" ]] && download_section $section
+  [[ $check_website == "yes" ]] && check_section $section
+  report_title="section $(basename $section)"
+elif [[ -d $grimoire ]]; then
+  for directory in $(find  $grimoire -mindepth 1  -maxdepth 1 -type d -printf '%f '); do
+      [[ $check_download == "yes" ]] && download_section "$grimoire/$directory"
+      [[ $check_website == "yes" ]] && check_section "$grimoire/$directory"
+  done
+  report_title="grimoire $(basename $grimoire)"
+fi
+
+
+# reporting the success or failure to the terminal (and mail)
+
+failed_files=$(ls $$.*.failed 2>/dev/null)
+if [[ $failed_files != "" ]]; then
+  number_of_fails=$(cat $failed_files | wc -l)
+  if [[ $email_report == "yes" ]]; then
+     message "Failed spells ($number_of_fails): \n\n$(cat $failed_files | sort)" | mail -s "$(basename $0)-$$: $report_title FAILLURE report" -- $email
+  fi
+  message "${PROBLEM_COLOR}Failed spells ($number_of_fails):${MESSAGE_COLOR} \n\n$(cat $failed_files | sort)${DEFAULT_COLOR}"
+  set_term_title "Failed"
+  rm $failed_files
+else
+  if [[ $email_report == "yes" ]]; then
+    message "Flawless victory" | mail -s "$(basename $0)-$$: $report_title success report" -- $email
+  fi
+  set_term_title "Victory"
+  message "${MESSAGE_COLOR}Flawless victory!${DEFAULT_COLOR}"
+fi
+
+# we are done exiting.
+safe_exit 0

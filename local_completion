@@ -1,0 +1,39 @@
+#!/bin/bash
+
+[ -f /etc/bash_completion.d/smgl_completion ] &&
+eval `. /etc/bash_completion.d/smgl_completion`
+
+_installed_spells()
+{
+    local cur prev
+    COMPREPLY=()
+    cur=${COMP_WORDS[COMP_CWORD]}
+    prev=${COMP_WORDS[COMP_CWORD-1]}
+	_add_installed_spell_list
+    return 0
+
+}
+
+_all_spells()
+{
+    local cur prev
+    COMPREPLY=()
+    cur=${COMP_WORDS[COMP_CWORD]}
+    prev=${COMP_WORDS[COMP_CWORD-1]}
+	_spell_list
+    return 0
+}
+have gt && complete -F _installed_spells -o default gt
+have gw && complete -F _all_spells -o default gw
+have gv && complete -F _all_spells -o default gv
+have gu && complete -F _all_spells -o default gu
+have gl &&  complete -F _all_spells -o default gl
+have gvs && complete -F _all_spells -o default gvs
+have gh && complete -F _all_spells -o default gh
+have gil && complete -F _installed_spells -o default gil
+have gcl && complete -F _installed_spells -o default gcl
+
+have hashcheck.sh && complete -F _all_spells -o default hashcheck.sh
+have resignsources.sh && complete -F _all_spells -o default resignsources.sh
+
+
