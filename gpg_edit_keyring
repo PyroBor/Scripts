@@ -1,9 +1,11 @@
 #!/bin/bash
-# process the params
-. /etc/sorcery/local/guruinfo
-git_dir="/home/bor/git/grimoire"
+
+#. /etc/sorcery/local/guruinfo
 
 
+#---------------------------------------------------------------------
+## process the params
+#---------------------------------------------------------------------
 function process_params() {
   while [[ "$1" == -* ]] # 2) params
     do
@@ -17,6 +19,9 @@ function process_params() {
   done
 }
 
+#---------------------------------------------------------------------
+## Shows usage
+#---------------------------------------------------------------------
 function show_usage() {
 usage="Usage: $(basename $0) #keyID /path/\n
 -d|--delete\t delete selected key from keyring\n
@@ -28,19 +33,36 @@ usage="Usage: $(basename $0) #keyID /path/\n
 echo -e $usage
 }
 
-
+#---------------------------------------------------------------------
+## @param keyID
+## @param path to keyring
+##
+## Add key to selected keyring.
+#---------------------------------------------------------------------
 function gpg_add_key() {
   local key_to_add=$1
   local path_to_keyring=$2
   gpg --export-options export-minimal --export --armor $key_to_add | gpg --no-default-keyring --keyring $path_to_keyring --import
 }
 
+#---------------------------------------------------------------------
+## @param keyID
+## @param path to keyring
+##
+## Remove key to selected keyring.
+#---------------------------------------------------------------------
 function gpg_del_key() {
   local key_to_delete=$1
   local path_to_keyring=$2
   gpg --batch --yes --no-default-keyring  --keyring $path_to_keyring --delete-keys $key_to_delete
 }
 
+#---------------------------------------------------------------------
+## @param keyID
+## @param path to grimoire
+##
+## Search for keyID in all "*.gpg" files in grimoire path. 
+#---------------------------------------------------------------------
 function search_gpg_key() {
   local key_to_search=$1
   local path_to_grimoire=${2:`pwd`}
@@ -54,17 +76,21 @@ function search_gpg_key() {
   done
 }
 
+#---------------------------------------------------------------------
+## @param keyID
+## @param path to keyring
+##
+## Import key to selected keyring.
+#---------------------------------------------------------------------
 function gpg_import_key() {
   local key_to_import=$1
   local path_to_keyring=$2
   gpg --import-options import-minimal --no-default-keyring --keyring $path_to_keyring --recv-keys $key_to_import
 }
 
-# start
-#if [[ ${#@} != 2 ]]; then
-#  show_usage
-#fi
-
+#=========================
+## start of code
+#=========================
 process_params $@
 
 case "$mode" in
