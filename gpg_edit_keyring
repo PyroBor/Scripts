@@ -1,0 +1,75 @@
+#!/bin/bash
+# process the params
+. /etc/sorcery/local/guruinfo
+git_dir="/home/bor/git/grimoire"
+
+
+function process_params() {
+  while [[ "$1" == -* ]] # 2) params
+    do
+    case "$1" in
+     "-d"|"--delete") mode="delete";  shift;;
+     "-a"|"--add")   mode="add"; shift;;
+     "-i"|"--import") mode="import"; shift;;
+     "-s"|"--search") mode="search"; shift;;
+     "-h"|"--help"|*) show_usage; exit 2 ;;
+    esac
+  done
+}
+
+function show_usage() {
+usage="Usage: $(basename $0) #keyID /path/\n
+-d|--delete\t delete selected key from keyring\n
+-a|--add\t add selcted key to keying\n
+-i|--import\t import selected key to keyring\n
+-s|--search\t search for key in grimoire\n
+-h|--help\t show this help"\n
+
+echo -e $usage
+}
+
+
+function gpg_add_key() {
+  local key_to_add=$1
+  local path_to_keyring=$2
+  gpg --export-options export-minimal --export --armor $key_to_add | gpg --no-default-keyring --keyring $path_to_keyring --import
+}
+
+function gpg_del_key() {
+  local key_to_delete=$1
+  local path_to_keyring=$2
+  gpg --batch --yes --no-default-keyring  --keyring $path_to_keyring --delete-keys $key_to_delete
+}
+
+function search_gpg_key() {
+  local key_to_search=$1
+  local path_to_grimoire=${2:`pwd`}
+  for gpg_keyring in $(find $path_to_grimoire -mindepth 0 -maxdepth 3 -iname "*.gpg" -printf "%P\n"); do
+    first_found=$(gpg --batch --list-options show-keyring $gpg_keyring 2> /dev/null |grep "$key_to_search"|head -n1)
+    if [[ $found != "" ]];then
+      echo "Key $key_to_search found in $gpg_keyring:"
+      echo $first_found
+    fi
+    unset first_found
+  done
+}
+
+function gpg_import_key() {
+  local key_to_import=$1
+  local path_to_keyring=$2
+  gpg --import-options import-minimal --no-default-keyring --keyring $path_to_keyring --recv-keys $key_to_import
+}
+
+# start
+#if [[ ${#@} != 2 ]]; then
+#  show_usage
+#fi
+
+process_params $@
+
+case "$mode" in
+  add)    gpg_add_key $1 $2;;
+  delete) gpg_del_key $1 $2;;
+  import) gpg_import_key $1 $2;;
+  search) search_gpg_key $1 $2;;
+esac
