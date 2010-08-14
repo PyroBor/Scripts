@@ -7,7 +7,7 @@
 ## process the params
 #---------------------------------------------------------------------
 function process_params() {
-  while [[ "$1" == -* ]] # 2) params
+  while [[ "$1" == -* ]] 
     do
     case "$1" in
      "-d"|"--delete") mode="delete";  shift;;
@@ -28,7 +28,7 @@ usage="Usage: $(basename $0) #keyID /path/\n
 -a|--add\t add selcted key to keying\n
 -i|--import\t import selected key to keyring\n
 -s|--search\t search for key in grimoire\n
--h|--help\t show this help"\n
+-h|--help\t show this help"
 
 echo -e $usage
 }
@@ -42,7 +42,8 @@ echo -e $usage
 function gpg_add_key() {
   local key_to_add=$1
   local path_to_keyring=$2
-  gpg --export-options export-minimal --export --armor $key_to_add | gpg --no-default-keyring --keyring $path_to_keyring --import
+  gpg --export-options export-minimal --export --armor $key_to_add |\
+    gpg --no-default-keyring --keyring $path_to_keyring --import
 }
 
 #---------------------------------------------------------------------
@@ -54,7 +55,8 @@ function gpg_add_key() {
 function gpg_del_key() {
   local key_to_delete=$1
   local path_to_keyring=$2
-  gpg --batch --yes --no-default-keyring  --keyring $path_to_keyring --delete-keys $key_to_delete
+  gpg --batch --yes --no-default-keyring  --keyring $path_to_keyring \
+      --delete-keys $key_to_delete
 }
 
 #---------------------------------------------------------------------
@@ -65,10 +67,13 @@ function gpg_del_key() {
 #---------------------------------------------------------------------
 function search_gpg_key() {
   local key_to_search=$1
-  local path_to_grimoire=${2:`pwd`}
-  for gpg_keyring in $(find $path_to_grimoire -mindepth 0 -maxdepth 3 -iname "*.gpg" -printf "%P\n"); do
-    first_found=$(gpg --batch --list-options show-keyring $gpg_keyring 2> /dev/null |grep "$key_to_search"|head -n1)
-    if [[ $found != "" ]];then
+  local path_to_grimoire=${2:-`pwd`}
+  for gpg_keyring in \
+  $(find $path_to_grimoire -mindepth 0 -maxdepth 3 -iname "*.gpg" -printf "%P\n")
+  do
+    first_found=$(gpg --batch --list-options show-keyring $gpg_keyring \
+                  2> /dev/null |grep "$key_to_search"|head -n1)
+    if [[ $first_found != "" ]];then
       echo "Key $key_to_search found in $gpg_keyring:"
       echo $first_found
     fi
@@ -85,13 +90,15 @@ function search_gpg_key() {
 function gpg_import_key() {
   local key_to_import=$1
   local path_to_keyring=$2
-  gpg --import-options import-minimal --no-default-keyring --keyring $path_to_keyring --recv-keys $key_to_import
+  gpg --import-options import-minimal --no-default-keyring --keyring $path_to_keyring \
+      --recv-keys $key_to_import
 }
 
 #=========================
 ## start of code
 #=========================
-process_params $@
+process_params "$@"
+shift # need to find to transfer that shift from function proccess_params... untill then...
 
 case "$mode" in
   add)    gpg_add_key $1 $2;;
