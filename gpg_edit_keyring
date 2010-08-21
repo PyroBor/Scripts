@@ -1,24 +1,5 @@
 #!/bin/bash
 
-#. /etc/sorcery/local/guruinfo
-
-
-#---------------------------------------------------------------------
-## process the params
-#---------------------------------------------------------------------
-function process_params() {
-  while [[ "$1" == -* ]] 
-    do
-    case "$1" in
-     "-d"|"--delete") mode="delete";  shift;;
-     "-a"|"--add")   mode="add"; shift;;
-     "-i"|"--import") mode="import"; shift;;
-     "-s"|"--search") mode="search"; shift;;
-     "-h"|"--help"|*) show_usage; exit 2 ;;
-    esac
-  done
-}
-
 #---------------------------------------------------------------------
 ## Shows usage
 #---------------------------------------------------------------------
@@ -90,19 +71,39 @@ function search_gpg_key() {
 function gpg_import_key() {
   local key_to_import=$1
   local path_to_keyring=$2
-  gpg --import-options import-minimal --no-default-keyring --keyring $path_to_keyring \
-      --recv-keys $key_to_import
+  gpg --import-options import-minimal --no-default-keyring \
+      --keyring $path_to_keyring --recv-keys $key_to_import
 }
 
-#=========================
-## start of code
-#=========================
-process_params "$@"
-shift # need to find to transfer that shift from function proccess_params... untill then...
+#---------------------------------------------------------------------
+## @param path to keyring
+##
+## Show keys in keyring.
+#---------------------------------------------------------------------
+function gpg_show_keyring() {
+  local path_to_keyring=$1
+  gpg --list-options show-keyring $path_to_keyring
+}
+
+
+#---------------------------------------------------------------------
+## process the params
+#---------------------------------------------------------------------
+ while [[ "$1" == -* ]]; do
+  case "$1" in
+   "-d"|"--delete")   mode="delete";    shift;;
+   "-a"|"--add")      mode="add";       shift;;
+   "-i"|"--import")   mode="import";    shift;;
+   "-s"|"--search")   mode="search";    shift;;
+   "-v"|"--view")     mode="view";      shift;;
+   "-h"|"--help"|*)   show_usage;       exit 2 ;;
+  esac
+done
 
 case "$mode" in
   add)    gpg_add_key $1 $2;;
   delete) gpg_del_key $1 $2;;
   import) gpg_import_key $1 $2;;
   search) search_gpg_key $1 $2;;
+  view) gpg_show_keyring $1;;
 esac
