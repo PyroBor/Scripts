@@ -2,7 +2,8 @@
 
 ## fastcommit.sh
 # commits changes with commit per spell
-# it uses the first comment in HISTORY file for commit msg
+# it uses the first comment in HISTORY file for main commit msg
+# others are added in detailed description
 
 . /etc/sorcery/config # needed for colors in one message line. A bit overkill. But why not :P
 
@@ -17,21 +18,41 @@ for changed_spell_path in $changed_spells_path_list; do
   ####### part to get info from history
   # lets move the last history entry in one file for easier manipulation
   # get the first empty line
-  grep_for_end=$(grep -m1 -n -o "^$" $changed_spell_path/HISTORY);
-  number_of_lines=${rep_for_end%:*}
+  grep_for_end=$(grep -m1 -n "^$" $changed_spell_path/HISTORY);
+  number_of_lines=${grep_for_end%%:*}
   # we dont need the empty line at the end
   number_of_lines=$(( $number_of_lines - 1 ))
+
   # now lets move the important part
   temp_history=$TEMP_DIR/history
   head -n $number_of_lines $changed_spell_path/HISTORY > $temp_history
   # we dont really need the first line... we only need the changes
-  sed -i '1d' $temp_history
-  # getthe first change in HISTORY. It also includes ":"
+  sed -i '1d' $temp_history && number_of_lines=$(( $number_of_lines - 1 ))
+  # the first change in HISTORY. It also includes ":" (first change the important change)
   first_change_in_history=$(grep -E -m1 -o  ":.*" "$temp_history")
+  first_file_changed=$(grep -E -m1 -o  ".*:" "$temp_history")
+  first_file_changed=${first_file_changed##* }
+  # we don't need main change. since we will add it saperatly
+  sed -i '1d' $temp_history && number_of_lines=$(( $number_of_lines - 1 ))
+  temp_commit_msg=$TEMP_DIR/commit_msg
+  # main line SPELL: first change
+  echo "${changed_spell}${first_change_in_history}" > $temp_commit_msg
 
+  # do we have any more lines in temp_history? lets mentioned them in commit msg
+  if [[ $number_of_lines -gt "0" ]]; then
+    echo  >> $temp_commit_msg # second line is empty:)
+    sed -i -e 's/^[\t]*//' $temp_history # remove leading tab
+    # if first isn't * there is need to add the first file change
+    if [[ $(head -c 1 $temp_history) != "*" ]]; then
+      sed -i "1 s/^[ ]/* $first_file_changed/" $temp_history
+    fi
+    # move history to commit msg
+    cat $temp_history >> $temp_commit_msg
+  fi
+  
+  ####### stage the changes
   # only works with adding files. not with removing... 
   git add $changed_spell_path/*
-  
   # lets get list of removed files in our spell
   removed_files_in_spell=$(git diff --summary |grep -E -o "$changed_spell_path.*")
   # lets remove the files
@@ -40,7 +61,7 @@ for changed_spell_path in $changed_spells_path_list; do
   done
 
   # now we have staged all changes in path and we can commit
-  git commit -q -m "${changed_spell}${first_change_in_history}"
+  git commit -q -F "$temp_commit_msg"
   message "${MESSAGE_COLOR}Commited - ${SPELL_COLOR}${changed_spell}${FILE_COLOR}${first_change_in_history}${DEFAULT_COLOR}"
 done
 
