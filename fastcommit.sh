@@ -5,6 +5,13 @@
 # it uses the first comment in HISTORY file for main commit msg
 # others are added in detailed description
 
+## TODO
+# - improve multiline commits
+# - handle changes that aren't spell changes but the change is
+#   is described in ChangeLog
+# - loading whole sorcery functions is really a bit overkill... maybe remove colors...
+
+
 . /etc/sorcery/config # needed for colors in one message line. A bit overkill. But why not :P
 
 TEMP_DIR="/tmp/$$-fastcommit"
