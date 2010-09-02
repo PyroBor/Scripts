@@ -68,7 +68,7 @@ function get_subtitles (){
   if [ -f "$wanted_dir/$newname_naked.srt" ] && [ $subtitleOW == "no" ]; then
     echo "there are allready one subtitles go with --subtitleOW to overwrite"
   else
-    download_link=$(elinks --dump "http://www.sub-titles.net/ppodnapisi/search?tbsl=3&asdp=1&sK=$seria&sJ=$lang&sTS=$season&sTE=$episode&sO=asc&sS=time" |grep -m1 -E -o  "http://www.sub-titles.net/ppodnapisi/download/i/.*")
+    download_link=$($elinks --dump "http://www.sub-titles.net/ppodnapisi/search?tbsl=3&asdp=1&sK=$seria&sJ=$lang&sTS=$season&sTE=$episode&sO=asc&sS=time" |grep -m1 -E -o  "http://www.sub-titles.net/ppodnapisi/download/i/.*")
     if [[ "$download_link" != "" ]]; then
       wget -q  $download_link
       unzip -qq *.zip
@@ -115,7 +115,7 @@ case "$1" in
   "--wanted_dir")        wanted_dir="$2";                 shift 2 ;;
   "--seria")             seria="$2";                      shift 2 ;;
   "--imdb")              imdb=yes;                        shift ;;
-  "--imdb_url")          imdb_url="$2";                   shift 2 ;;
+  "--imdb_url")          imdb=yes; imdb_url="$2";         shift 2 ;;
   "--subtitle")          subtitle=yes;                    shift ;;
   "--subtitleOW")        subtitle=yes && subtitleOW=yes;  shift ;;
   "--selection")         selection_of_files="$2";         shift 2 ;;
