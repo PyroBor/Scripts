@@ -5,14 +5,22 @@
 # it uses the first comment in HISTORY file for main commit msg
 # others are added in detailed description
 
+if [[ -n $1 ]];then
+  echo "Use it in top grimoire directory: $(basename $0)"
+  echo
+  echo "commits changes with commit per spell"
+  echo "it uses the first comment in HISTORY file for main commit msg"
+  echo "others are added in detailed description"
+  echo
+  exit 1
+fi
+
 ## TODO
 # - improve multiline commits
 # - handle changes that aren't spell changes but the change is
 #   is described in ChangeLog
-# - loading whole sorcery functions is really a bit overkill... maybe remove colors...
+# - maybe param switch for multiline commits disable/enable...
 
-
-. /etc/sorcery/config # needed for colors in one message line. A bit overkill. But why not :P
 
 TEMP_DIR="/tmp/$$-fastcommit"
 mkdir $TEMP_DIR
@@ -69,9 +77,11 @@ for changed_spell_path in $changed_spells_path_list; do
 
   # now we have staged all changes in path and we can commit
   git commit -q -F "$temp_commit_msg"
-  message "${MESSAGE_COLOR}Commited - ${SPELL_COLOR}${changed_spell}${FILE_COLOR}${first_change_in_history}${DEFAULT_COLOR}"
+  # we commit quietly but lets use oneline log to show what we commited
+  # this will show us our last commit in nice oneline form.
+  git log --oneline -1
 done
 
-message "${MESSAGE_COLOR}Use ${SPELL_COLOR}git log -p origin..@{0}${MESSAGE_COLOR} to check changes before pushing them...${DEFAULT_COLOR}"
+echo "Use 'git log -p origin..@{0}' to check changes before pushing them..."
 
 rm -rf $TEMP_DIR
