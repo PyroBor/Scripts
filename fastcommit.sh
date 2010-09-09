@@ -69,7 +69,8 @@ for changed_spell_path in $changed_spells_path_list; do
   fi
   
   ####### stage the changes
-  # only works with adding files. not with removing... 
+  # only works with adding files. not with removing...
+  # this also adds the files that are not tracked by git in that directory
   git add $changed_spell_path/*
   # lets get list of removed files in our spell
   removed_files_in_spell=$(git diff --summary |grep -E -o "$changed_spell_path.*")
