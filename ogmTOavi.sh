@@ -1,4 +1,11 @@
 #!/bin/bash
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+##
+## Transforms *.ogm in one dir to *.avi files.
+#---
+
 in_dir="$(pwd)"
 out_dir="$in_dir.avi"
 IKNOWWHATIMDOING="no"
