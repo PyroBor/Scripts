@@ -1,4 +1,10 @@
 #!/bin/bash
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+##
+## somekind of mirror checking script. far from functional
+#---
 mirrors_file=
 
 while [[ "$1" == -* ]] # 2) params
