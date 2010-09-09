@@ -1,7 +1,16 @@
 #!/bin/bash
-
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+##
+## Script for easy manipulation of gpg keyrings
+## Basicly so you don't need to remember those gpg comands. 
+##
 ## TODO
-# - beter param checking... maybe getopts
+## - beter param checking... maybe getopts
+#---
+
+
 
 #---------------------------------------------------------------------
 ## Shows usage
