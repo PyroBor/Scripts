@@ -1,4 +1,11 @@
 #!/bin/sh
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+##
+## sed script that adds headers to functions for bashdoc
+##
+#---
 dash_line="#---"
 sed -i "
 :z 
