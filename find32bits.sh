@@ -1,4 +1,8 @@
 #!/bin/bash
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+#---
 for i in /usr/bin/*; do
 [[ ! -L $i ]] || continue
 file $i | grep-q 32-bit && \
