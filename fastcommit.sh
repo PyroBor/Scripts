@@ -25,39 +25,47 @@ if [[ -n $1 ]];then
   exit 1
 fi
 
+## vars
 TEMP_DIR="/tmp/$$-fastcommit"
 mkdir $TEMP_DIR
+temp_history=$TEMP_DIR/history
+temp_commit_msg=$TEMP_DIR/commit_msg
 
 changed_spells_path_list=$(git diff --dirstat=0 |sed -e "s/.*% //")
 
 for changed_spell_path in $changed_spells_path_list; do
   changed_spell=$(basename $changed_spell_path)
 
-  ####### part to get info from history
-  # lets move the last history entry in one file for easier manipulation
-  # get the first empty line
-  grep_for_end=$(grep -m1 -n "^$" $changed_spell_path/HISTORY);
-  number_of_lines=${grep_for_end%%:*}
-  # we dont need the empty line at the end
-  number_of_lines=$(( $number_of_lines - 1 ))
+  ##### get changes form history
+  git diff $changed_spell_path/HISTORY > $temp_history
+  # now we have diff of changes. lets remove those lines that dont have + at the beginning
+  sed -i '/^[^+]/d' $temp_history
+  # and those + on the beginning of lines
+  sed -i 's/^+//' $temp_history
+  # now we really have only the part of the history that was changed
 
-  # now lets move the important part
-  temp_history=$TEMP_DIR/history
-  head -n $number_of_lines $changed_spell_path/HISTORY > $temp_history
-  # we dont really need the first line... we only need the changes
-  sed -i '1d' $temp_history && number_of_lines=$(( $number_of_lines - 1 ))
+  # we can get rid of that date line & empty lines and one line
+  # & that one line with ++ on beginning (from diff header)
+  # this will break in 2100 or if we have time machine :)
+  sed -i -e '/^20/d' -e '/^$/d' -e '/^++/d' $temp_history
+
+  # now we really have only changes in $temp_history
+  # lets check how many lines of changes is there
+  number_of_lines=$(wc -l $temp_history |cut -d' ' -f 1)
+
   # the first change in HISTORY. It also includes ":" (first change the important change)
   first_change_in_history=$(grep -E -m1 -o  ":.*" "$temp_history")
   first_file_changed=$(grep -E -m1 -o  ".*:" "$temp_history")
-  first_file_changed=${first_file_changed##* }
-  # we don't need main change. since we will add it saperatly
-  sed -i '1d' $temp_history && number_of_lines=$(( $number_of_lines - 1 ))
-  temp_commit_msg=$TEMP_DIR/commit_msg
+  first_file_changed=${first_file_changed##* } # we remove that tab and *
+
   # main line SPELL: first change
   echo "${changed_spell}${first_change_in_history}" > $temp_commit_msg
 
+  ##### multiline commits start here
   # do we have any more lines in temp_history? lets mentioned them in commit msg
-  if [[ $number_of_lines -gt "0" ]]; then
+  if [[ $number_of_lines -gt "1" ]]; then
+    # we don't need main change. since we added it saperatly
+    sed -i '1d' $temp_history && number_of_lines=$(( $number_of_lines - 1 ))
     echo  >> $temp_commit_msg # second line is empty:)
     sed -i -e 's/^[\t]*//' $temp_history # remove leading tab
     # if first isn't * there is need to add the first file change
