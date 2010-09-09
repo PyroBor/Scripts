@@ -1,5 +1,13 @@
 #!/bin/bash
-
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+##
+## bash_completion for my short commands and some guru tools
+##
+## TODO
+## - more support for guru tools (smgl-diff-keyring)
+#---
 [ -f /etc/bash_completion.d/smgl_completion ] &&
 eval `. /etc/bash_completion.d/smgl_completion`
 
