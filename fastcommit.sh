@@ -1,9 +1,19 @@
 #!/bin/bash
-
+#---
 ## fastcommit.sh
-# commits changes with commit per spell
-# it uses the first comment in HISTORY file for main commit msg
-# others are added in detailed description
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+##
+## commits changes with commit per spell
+## it uses the first comment in HISTORY file for main commit msg
+## others are added in detailed description
+##
+## TODO
+## - improve multiline commits
+## - handle changes that aren't spell changes but the change is
+##   is described in ChangeLog
+## - maybe param switch for multiline commits disable/enable...
+#---
 
 if [[ -n $1 ]];then
   echo "Use it in top grimoire directory: $(basename $0)"
@@ -14,13 +24,6 @@ if [[ -n $1 ]];then
   echo
   exit 1
 fi
-
-## TODO
-# - improve multiline commits
-# - handle changes that aren't spell changes but the change is
-#   is described in ChangeLog
-# - maybe param switch for multiline commits disable/enable...
-
 
 TEMP_DIR="/tmp/$$-fastcommit"
 mkdir $TEMP_DIR
