@@ -1,12 +1,13 @@
 #!/bin/bash
-#
-# summonsection v1.5
-#
-# This file is GPL
-#
-# 2002-05-17 M.L. <m.l@compaqnet.fr>
-# 2009-04-28 Bor Kraljič <pyrobor@ver.si>
-
+#---
+## Based on summonsection v1.5
+## But it is heavily rewritten...
+##
+## This file is GPL
+##
+## 2002-05-17 M.L. <m.l@compaqnet.fr> (author of summonsection)
+## 2009-04-28 Bor Kraljič <pyrobor@ver.si>
+#---
 
 
 # let's get sorcery goodies
