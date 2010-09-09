@@ -35,7 +35,10 @@ changed_spells_path_list=$(git diff --dirstat=0 |sed -e "s/.*% //")
 
 for changed_spell_path in $changed_spells_path_list; do
   changed_spell=$(basename $changed_spell_path)
+  changed_section=${changed_spell_path%%/*}
 
+  # primitive check to not commit changes in section/bllll
+  if [[ $changed_spell != $changed_section ]];then
   ##### get changes form history
   git diff $changed_spell_path/HISTORY > $temp_history
   # now we have diff of changes. lets remove those lines that dont have + at the beginning
@@ -107,6 +110,7 @@ for changed_spell_path in $changed_spells_path_list; do
   #lets clean temp files
   rm $temp_commit_msg
   rm $temp_history
+  fi
 done
 
 echo "Use 'git log -p origin..@{0}' to check changes before pushing them..."
