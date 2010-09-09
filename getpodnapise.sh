@@ -1,4 +1,8 @@
 #!/bin/bash
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+#---
 seria="Boston Legal"
 season=1
 episode=2
