@@ -8,11 +8,22 @@
 ## it uses the first comment in HISTORY file for main commit msg
 ## others are added in detailed description
 ##
+## ATM it only works with changes in spell paths section/spell/
+## more is on todo list.
+##
 ## TODO
 ## - improve multiline commits
+## - maybe param switch for multiline commits disable/enable...
+## - param to query user for additional commit message.
+## - get better check  to exclude changes in section in first loop
+##   there are spells == section :(
+## - move the code that could be used in both loops to functions
+##   * that clean history part
 ## - handle changes that aren't spell changes but the change is
 ##   is described in ChangeLog
-## - maybe param switch for multiline commits disable/enable...
+##   this could be a second for loop. changes could be obtained with:
+##   git diff --numstat |sed -e "s/[0-9]*[\t]*[0-9]*[\t]*//"
+##   search in ChangeLog to get the right msg would be needed!
 #---
 
 if [[ -n $1 ]];then
@@ -33,6 +44,8 @@ temp_commit_msg=$TEMP_DIR/commit_msg
 
 changed_spells_path_list=$(git diff --dirstat=0 |sed -e "s/.*% //")
 
+
+###### SPELL COMMIT LOOP
 for changed_spell_path in $changed_spells_path_list; do
   changed_spell=$(basename $changed_spell_path)
   changed_section=${changed_spell_path%%/*}
