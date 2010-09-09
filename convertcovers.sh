@@ -1,4 +1,8 @@
 #!/bin/sh
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+#---
 music=/home/bor/music
 templist=/home/bor/list.list
 find $music -iname *.jpg >> $templist
