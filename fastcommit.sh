@@ -42,12 +42,13 @@ for changed_spell_path in $changed_spells_path_list; do
   sed -i '/^[^+]/d' $temp_history
   # and those + on the beginning of lines
   sed -i 's/^+//' $temp_history
-  # now we really have only the part of the history that was changed
+  # that one line with ++ on beginning (from diff header)
+  sed -i -e '/^++/d' $temp_history
+  # now we really have only the part of the history that was changed 
 
   # we can get rid of that date line & empty lines and one line
-  # & that one line with ++ on beginning (from diff header)
   # this will break in 2100 or if we have time machine :)
-  sed -i -e '/^20/d' -e '/^$/d' -e '/^++/d' $temp_history
+  sed -i -e '/^20/d' -e '/^$/d' $temp_history
 
   # now we really have only changes in $temp_history
   # lets check how many lines of changes is there
