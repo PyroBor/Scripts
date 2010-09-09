@@ -83,6 +83,10 @@ for changed_spell_path in $changed_spells_path_list; do
   # we commit quietly but lets use oneline log to show what we commited
   # this will show us our last commit in nice oneline form.
   git log --oneline -1
+
+  #lets clean temp files
+  rm $temp_commit_msg
+  rm $temp_history
 done
 
 echo "Use 'git log -p origin..@{0}' to check changes before pushing them..."
