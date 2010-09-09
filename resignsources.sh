@@ -1,4 +1,14 @@
 #!/bin/bash
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+##
+## Resings sources in grimoire. Can use upstream md5 to check if
+##
+## WIP
+## TODO
+## - add params to decide what to do :)
+#---
 
 . /etc/sorcery/config
 
