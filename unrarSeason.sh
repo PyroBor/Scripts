@@ -1,4 +1,9 @@
 #!/bin/bash
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+#---
+
 season_folder="$(pwd)"
 target_folder="$season_folder-avi"
 delrarfiles="no"
