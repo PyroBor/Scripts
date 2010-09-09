@@ -54,8 +54,14 @@ for changed_spell_path in $changed_spells_path_list; do
   # lets check how many lines of changes is there
   number_of_lines=$(wc -l $temp_history |cut -d' ' -f 1)
 
-  # the first change in HISTORY. It also includes ":" (first change the important change)
+  # the first change in HISTORY that is CHANGED!
+  # It also includes ":" (first change the important change)
   first_change_in_history=$(grep -E -m1 -o  ":.*" "$temp_history")
+  if [[ $first_change_in_history == "" ]] ; then
+    # we missed change. i guess it doesn't have file in front
+    # lets remove spaces in front and add that : and first change
+    first_change_in_history=": $(sed -n -e '1 s/^[\t\ ]*// p' $temp_history)"
+  fi
   first_file_changed=$(grep -E -m1 -o  ".*:" "$temp_history")
   first_file_changed=${first_file_changed##* } # we remove that tab and *
 
@@ -66,13 +72,17 @@ for changed_spell_path in $changed_spells_path_list; do
   # do we have any more lines in temp_history? lets mentioned them in commit msg
   if [[ $number_of_lines -gt "1" ]]; then
     # we don't need main change. since we added it saperatly
-    sed -i '1d' $temp_history && number_of_lines=$(( $number_of_lines - 1 ))
+    sed -i '1d' $temp_history
     echo  >> $temp_commit_msg # second line is empty:)
+    # http://www.kernel.org/pub/software/scm/git/docs/user-manual.html#creating-good-commit-messages
     sed -i -e 's/^[\t]*//' $temp_history # remove leading tab
     # if first isn't * there is need to add the first file change
-    if [[ $(head -c 1 $temp_history) != "*" ]]; then
+    # ofcourse if we have it...
+    if [[ $(head -c 1 $temp_history) != "*" ]] && [[ $first_file_changed != "" ]]; then
       sed -i "1 s/^[ ]/* $first_file_changed/" $temp_history
     fi
+    #### this could get ugly if we have 2 changes that doesn't have file names in lines...
+
     # move history to commit msg
     cat $temp_history >> $temp_commit_msg
   fi
