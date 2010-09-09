@@ -1,4 +1,8 @@
 #!/bin/bash
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+#---
 ripper="0tv|lol|aaf"
 flags="dvdrip|repack|proper|-|xvid|iNTERNAL|rerip|hdtv"
 #wanted_dir="/home/bor/video/Arrested.Development.S01.DVDRip.XviD-MEDiEVAL"
