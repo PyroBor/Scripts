@@ -1,4 +1,10 @@
 #!/bin/bash
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+##
+## Prepares info of spell for wiki
+#---
 
 # let's get sorcery goodies
 . /etc/sorcery/config
