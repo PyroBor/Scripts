@@ -1,4 +1,13 @@
 #!/bin/bash
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+##
+## Renames files based on filename or imdb
+##
+## TODO
+## - elinks doesn't work anymore with imdb...
+#---
 flags="0tv|n0tv|fqm|xor|2hd|0tv|C4TV|720p|1080p|x264|X264"
 IKNOWWHATIMDOING="no"
 wanted_dir="$(pwd)"
