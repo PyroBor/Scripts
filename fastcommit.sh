@@ -32,14 +32,16 @@
 #---
 function show_usage() {
   exit_code=${1:-1}
-  usage="Use it in top grimoire directory: $(basename $0)\n\n
-commits changes with commit per spell\n
-it uses the first comment in HISTORY file for main commit msg\n\n
-Options:\n
-\t-m|--multiline\t use all the lines in history and make multiline commits\n
-\t-a|--amend\t amend costum message in commit msg\n
-\t-h|--help\t show this help\n"
-  echo -e $usage
+  usage="Use it in top grimoire directory: $(basename $0)
+
+commits changes with commit per spell
+it uses the first comment in HISTORY file for main commit msg
+
+Options:
+\t-m|--multiline\t use all the lines in history and make multiline commits
+\t-a|--amend\t amend costum message in commit msg
+\t-h|--help\t show this help"
+  echo -e "$usage"
   exit $exit_code
 }
 
