@@ -13,8 +13,6 @@
 ##
 ## TODO
 ## - improve multiline commits
-## - maybe param switch for multiline commits disable/enable...
-## - param to query user for additional commit message.
 ## - get better check  to exclude changes in section in first loop
 ##   there are spells == section :(
 ## - move the code that could be used in both loops to functions
@@ -36,6 +34,7 @@ commits changes with commit per spell\n
 it uses the first comment in HISTORY file for main commit msg\n\n
 Options:\n
 \t-m|--multiline\t use all the lines in history and make multiline commits\n
+\t-a|--ammend\t ammend costum message in commit msg
 \t-h|--help\t shot this help\n"
   echo -e $usage
   exit 1
@@ -44,6 +43,7 @@ Options:\n
 ##### lets check params
 case $1 in
   "-m"|"--multiline") mutliline_mode=yes ; shift ;;
+  "-a"|"--ammend") costum_commit_msg=yes ; shift ;;
   "-h"|"--help")     show_usage ;;
   *)      echo "Param $1 not recognized."; show_usage ;;
 esac
@@ -128,6 +128,11 @@ for changed_spell_path in $changed_spells_path_list; do
 
     # now we have staged all changes in path and we can commit
     git commit -q -F "$temp_commit_msg"
+
+    # do we want to add any costum msg in commit ?
+    if [[ $costum_commit_msg == "yes" ]]; then
+      git commit -q --ammend
+    fi
     # we commit quietly but lets use oneline log to show what we commited
     # this will show us our last commit in nice oneline form.
     git log --oneline -1
