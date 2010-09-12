@@ -28,9 +28,10 @@
 
 
 #---
-## show help :P
+## show help :P and exit with wanted exit code
 #---
 function show_usage() {
+  exit_code=${1:-1}
   usage="Use it in top grimoire directory: $(basename $0)\n\n
 commits changes with commit per spell\n
 it uses the first comment in HISTORY file for main commit msg\n\n
@@ -39,7 +40,7 @@ Options:\n
 \t-a|--amend\t amend costum message in commit msg\n
 \t-h|--help\t show this help\n"
   echo -e $usage
-  exit 1
+  exit $exit_code
 }
 
 #---
@@ -62,14 +63,26 @@ function clean_history() {
 }
 
 ##### lets check params
-while [[ "$1" == -* ]]; do
+TEMP_OPTS=$(getopt -o mah --long amend,multiline,help \
+-n "$(basename $0)" -- "$@")
+if [[ $? != 0 ]]; then
+  show_usage 5
+fi
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP_OPTS"
+unset TEMP_OPTS
+
+while true; do
   case $1 in
     "-m"|"--multiline") mutliline_mode=yes ; shift ;;
-    "-a"|"--ammend") costum_commit_msg=yes ; shift ;;
-    "-h"|"--help")     show_usage ;;
-    *)      echo "$1 not recognized!"; show_usage ;;
+    "-a"|"--amend") costum_commit_msg=yes ; shift ;;
+    "-h"|"--help")     show_usage 0 ;;
+    --)          shift; break ;;
+    *)      echo "$1 not recognized!"; show_usage 3 ;;
+
   esac
 done
+
 ## vars
 TEMP_DIR="/tmp/$$-fastcommit"
 mkdir $TEMP_DIR
