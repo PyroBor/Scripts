@@ -35,11 +35,11 @@ function coolsleep {
 
 USAGE="USAGE:
 --wanted_dir <path>\t Rename files in folder [$wanted_dir]
- -y, --just-do-it \t Just do it! [$IKNOWWHATIMDOING]
 -h, --help \t\t Shows this help.
---seria \t\t specify seria name or dirname will be used [$seria]
+-s|--seria \t\t specify seria name or dirname will be used [$seria]
+-l|--links \t\t specify text web browser (links, elinks; others are not tested) [$elinks]
 --imdb \t\t\t Enable use of www.imdb.com will use the first hit on search for seria (needs elinks) [$imdb]
---imdb_url \t\t If you seria is not the first hit specify imdb link here [$imdb_url]
+-u|--imdb_url \t\t If you seria is not the first hit specify imdb link here [$imdb_url]
 --selection \t\t what files to use [$selection_of_files]
 --subtitle \t\t toggle download of subtitles [$subtitle]
 --subtitleOW \t\t toggle download of subtitles and overwrite of them [$subtitleOW]
@@ -115,22 +115,33 @@ function cleantmpdir (){
   rm -rf "$TMPDIR"
 }
 
-# if [[ -z "$1" ]]; then echo -e "$USAGE"; exit 0; fi # 1) no params
-while [[ "$1" == -* ]] # 2) params
-do
-case "$1" in
-  "--wanted_dir")        wanted_dir="$2";                 shift 2 ;;
-  "-s"|"--seria")             seria="$2";                      shift 2 ;;
-  "--imdb")              imdb=yes;                        shift ;;
-  "-u"|"--imdb_url")          imdb=yes; imdb_url="$2";         shift 2 ;;
-  "--subtitle")          subtitle=yes;                    shift ;;
-  "--subtitleOW")        subtitle=yes && subtitleOW=yes;  shift ;;
-  "--selection")         selection_of_files="$2";         shift 2 ;;
-  "-f"|"--format")       format="$2";                     shift 2 ;;
-  "--format-custom")     newname_format="$2";             shift 2 ;;
-  "-F"|"--one-file")     selected_files="$2";             shift 2 ;;
-  "--help-format")       echo -e "$FORMATHELP";           exit 0 ;;
-  "-h"|"--help"|*)       echo -e "$USAGE";                exit 0  ;;
+
+## Parse the command line parameters and arguments via getopt
+TEMP_OPTS=$(getopt -o 's:u:f:F:l_h' -l 'wanted_dir:,seria:,imdb,imdb_url:,subtitle,\
+subtitleOW,selection:,format:,links:,format-custom:,one-file:,help-format,help' \
+-n "$(basename $0)" -- "$@")
+if [[ $? != 0 ]]; then  echo -e "$USAGE"; exit 3; fi
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP_OPTS"
+unset TEMP_OPTS
+
+while true; do
+  case "$1" in
+    "--wanted_dir")        wanted_dir="$2";                 shift 2 ;;
+    "-l"|"--links")        elinks="$2"                      shift 2 ;;
+    "-s"|"--seria")        seria="$2";                      shift 2 ;;
+    "--imdb")              imdb=yes;                        shift   ;;
+    "-u"|"--imdb_url")     imdb=yes; imdb_url="$2";         shift 2 ;;
+    "--subtitle")          subtitle=yes;                    shift   ;;
+    "--subtitleOW")        subtitle=yes && subtitleOW=yes;  shift   ;;
+    "--selection")         selection_of_files="$2";         shift 2 ;;
+    "-f"|"--format")       format="$2";                     shift 2 ;;
+    "--format-custom")     newname_format="$2";             shift 2 ;;
+    "-F"|"--one-file")     selected_files="$2";             shift 2 ;;
+    "--help-format")       echo -e "$FORMATHELP";           exit 0  ;;
+    "-h"|"--help")         echo -e "$USAGE";                exit 0  ;;
+    --)                    shift ;                          break   ;;
+    *)                     echo -e "$USAGE";                exit 3  ;;
   esac
 done
 
