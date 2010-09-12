@@ -9,7 +9,6 @@
 ## - elinks doesn't work anymore with imdb...
 #---
 flags="0tv|n0tv|fqm|xor|2hd|0tv|C4TV|720p|1080p|x264|X264"
-IKNOWWHATIMDOING="no"
 wanted_dir="$(pwd)"
 seria="$(basename "$(pwd)")"
 imdb="no"
@@ -120,11 +119,10 @@ function cleantmpdir (){
 while [[ "$1" == -* ]] # 2) params
 do
 case "$1" in
-   "-y"|"--just-do-it")  IKNOWWHATIMDOING="yes";          shift  ;;
   "--wanted_dir")        wanted_dir="$2";                 shift 2 ;;
-  "--seria")             seria="$2";                      shift 2 ;;
+  "-s"|"--seria")             seria="$2";                      shift 2 ;;
   "--imdb")              imdb=yes;                        shift ;;
-  "--imdb_url")          imdb=yes; imdb_url="$2";         shift 2 ;;
+  "-u"|"--imdb_url")          imdb=yes; imdb_url="$2";         shift 2 ;;
   "--subtitle")          subtitle=yes;                    shift ;;
   "--subtitleOW")        subtitle=yes && subtitleOW=yes;  shift ;;
   "--selection")         selection_of_files="$2";         shift 2 ;;
@@ -136,7 +134,6 @@ case "$1" in
   esac
 done
 
-if [[ "$IKNOWWHATIMDOING" == "no" ]]; then echo -e "$USAGE"; exit 42; fi
 
 if [[ $format != "" ]]; then
   case "$format" in
