@@ -16,11 +16,16 @@
 ## - move the code that could be used in both loops to functions
 ## - handle changes that aren't spell changes but the change is
 ##   is described in ChangeLog
-##   * this could be a second for loop. changes could be obtained with:
-##     git diff --numstat |sed -e "s/[0-9]*[\t]*[0-9]*[\t]*//"
 ##   * search in ChangeLog to get the right msg would be needed!
 ##   * also problematic would be the commit of changelog... since
 ##     it would be to commit per line.. For single change it would go...
+##   * atm we avoid this by only applying if there 2 files changed
+##     ChangeLog + one changed
+## - handle new spells :) that one is even harder... it only has ChangeLog.
+##   but in ChangeLog there is path that could be used...
+##   perhaps one loop before file commit loop. but same problem:
+##   * also problematic would be the commit of changelog... since
+##     it would be to commit per line..
 ##
 #---
 
@@ -38,6 +43,7 @@ it uses the first comment in HISTORY file for main commit msg
 Options:
 \t-m|--multiline\t use all the lines in history and make multiline commits
 \t-a|--amend\t amend costum message in commit msg
+\t-f|--file\t commit also the changed file (under construction/don't use it:)
 \t-h|--help\t show this help"
   echo -e "$usage"
   exit $exit_code
@@ -93,7 +99,7 @@ function commit_it() {
 }
 
 ##### lets check params
-TEMP_OPTS=$(getopt -o mah --long amend,multiline,help \
+TEMP_OPTS=$(getopt -o mahf -l file,amend,multiline,help \
 -n "$(basename $0)" -- "$@")
 if [[ $? != 0 ]]; then
   show_usage 5
@@ -106,6 +112,7 @@ while true; do
   case $1 in
     "-m"|"--multiline") mutliline_mode=yes ; shift ;;
     "-a"|"--amend") costum_commit_msg=yes ; shift ;;
+    "-f"|"--file") filecommit_mode=yes ; shift ;;
     "-h"|"--help")     show_usage 0 ;;
     --)          shift; break ;;
     *)      echo "$1 not recognized!"; show_usage 3 ;;
@@ -189,6 +196,44 @@ for changed_spell_path in $changed_spells_path_list; do
   del_temp_files
 done
 
+###### FILE COMMIT LOOP
+# do we even want this. and we really need changelog changed for this. 
+if [[ $filecommit_mode == yes ]] &&  [[ $(git diff ChangeLog) != "" ]]; then
+  # lets get list of files in sections and top dir that are changed
+  changed_files_path_list=$(git diff --numstat |sed -e "s/[0-9-]*[\t]*[0-9-]*[\t]*//g")
+  for changed_file_path in $changed_files_path_list ; do
+    # we don't need to coomit ChangeLog...
+    [[ $changed_file_path == ChangeLog ]] && continue
+    
+    # we only know how to handle single files changes...
+    [[ $(wc -l <<< "$changed_files_path_list") -gt 2 ]] &&
+    echo "Too many files changed" && break
+
+
+    # reuse of that temp file... but name can be diffrent.
+    temp_changelog=$temp_history
+    
+    # lets start with simple example. 1 file changed and changelog.
+    git diff ChangeLog > $temp_changelog
+    # clean it and now we have only things that have changes
+    clean_history $temp_changelog
+
+    # keep it simple
+    first_change_in_changelog=$(grep -E -m1 -o  ":.*" "$temp_changelog")
+
+    # simple one line commit for start
+    echo "${changed_file_path}${first_change_in_changelog}" > $temp_commit_msg
+    
+    git add $changed_file_path
+    git add ChangeLog
+
+    # commit, edit and show oneline log
+    commit_it
+    
+    del_temp_files
+  done
+
+fi
 
 ##### end part
 if [[ $(git log origin..@{0}) == "" ]];then
