@@ -81,7 +81,6 @@ while true; do
     "-h"|"--help")     show_usage 0 ;;
     --)          shift; break ;;
     *)      echo "$1 not recognized!"; show_usage 3 ;;
-
   esac
 done
 
@@ -99,76 +98,75 @@ for changed_spell_path in $changed_spells_path_list; do
   changed_section=${changed_spell_path%%/*}
 
   # primitive check to not commit changes in section/bllll
-  if [[ $changed_spell != $changed_section ]];then
-    ##### get changes form history
-    git diff $changed_spell_path/HISTORY > $temp_history
+  [[ $changed_spell != $changed_section ]] && continue
+  ##### get changes form history
+  git diff $changed_spell_path/HISTORY > $temp_history
 
-    # we use function to clean the history file now
-    clean_history $temp_history
+  # we use function to clean the history file now
+  clean_history $temp_history
 
-    # now we really have only changes in $temp_history
-    # lets check how many lines of changes is there
-    number_of_lines=$(wc -l $temp_history |cut -d' ' -f 1)
+  # now we really have only changes in $temp_history
+  # lets check how many lines of changes is there
+  number_of_lines=$(wc -l $temp_history |cut -d' ' -f 1)
 
-    # the first change in HISTORY that is CHANGED!
-    # It also includes ":" (first change the important change)
-    first_change_in_history=$(grep -E -m1 -o  ":.*" "$temp_history")
-    if [[ $first_change_in_history == "" ]] ; then
-      # we missed change. i guess it doesn't have file in front
-      # lets remove spaces in front and add that : and first change
-      first_change_in_history=": $(sed -n -e '1 s/^[\t\ ]*// p' $temp_history)"
-    fi
-    first_file_changed=$(grep -E -m1 -o  ".*:" "$temp_history")
-    first_file_changed=${first_file_changed##* } # we remove that tab and *
-
-    # main line SPELL: first change
-    echo "${changed_spell}${first_change_in_history}" > $temp_commit_msg
-
-    ##### multiline commits start here
-    # do we have any more lines in temp_history? lets mentioned them in commit msg
-    if [[ $number_of_lines -gt "1" ]] && [[ $multiline_mode == "yes" ]]; then
-      # we don't need main change. since we added it saperatly
-      sed -i '1d' $temp_history
-      echo  >> $temp_commit_msg # second line is empty:)
-      # http://www.kernel.org/pub/software/scm/git/docs/user-manual.html#creating-good-commit-messages
-      sed -i -e 's/^[\t]*//' $temp_history # remove leading tab
-      # if first isn't * there is need to add the first file change
-      # ofcourse if we have it...
-      if [[ $(head -c 1 $temp_history) != "*" ]] && [[ $first_file_changed != "" ]]; then
-        sed -i "1 s/^[ ]/* $first_file_changed/" $temp_history
-      fi
-      #### this could get ugly if we have 2 changes that doesn't have file names in lines...
-
-      # move history to commit msg
-      cat $temp_history >> $temp_commit_msg
-    fi
-
-    ####### stage the changes
-    # only works with adding files. not with removing...
-    # this also adds the files that are not tracked by git in that directory
-    git add $changed_spell_path/*
-    # lets get list of removed files in our spell
-    removed_files_in_spell=$(git diff --summary |grep -E -o "$changed_spell_path.*")
-    # lets remove the files
-    for removed_file in $removed_files_in_spell; do
-      git rm -q $removed_file
-    done
-
-    # now we have staged all changes in path and we can commit
-    git commit -q -F "$temp_commit_msg"
-
-    # do we want to add any costum msg in commit ?
-    if [[ $costum_commit_msg == "yes" ]]; then
-      git commit -q --amend
-    fi
-    # we commit quietly but lets use oneline log to show what we commited
-    # this will show us our last commit in nice oneline form.
-    git log --oneline -1
-
-    #lets clean temp files
-    rm $temp_commit_msg
-    rm $temp_history
+  # the first change in HISTORY that is CHANGED!
+  # It also includes ":" (first change the important change)
+  first_change_in_history=$(grep -E -m1 -o  ":.*" "$temp_history")
+  if [[ $first_change_in_history == "" ]] ; then
+    # we missed change. i guess it doesn't have file in front
+    # lets remove spaces in front and add that : and first change
+    first_change_in_history=": $(sed -n -e '1 s/^[\t\ ]*// p' $temp_history)"
   fi
+  first_file_changed=$(grep -E -m1 -o  ".*:" "$temp_history")
+  first_file_changed=${first_file_changed##* } # we remove that tab and *
+
+  # main line SPELL: first change
+  echo "${changed_spell}${first_change_in_history}" > $temp_commit_msg
+
+  ##### multiline commits start here
+  # do we have any more lines in temp_history? lets mentioned them in commit msg
+  if [[ $number_of_lines -gt "1" ]] && [[ $multiline_mode == "yes" ]]; then
+    # we don't need main change. since we added it saperatly
+    sed -i '1d' $temp_history
+    echo  >> $temp_commit_msg # second line is empty:)
+    # http://www.kernel.org/pub/software/scm/git/docs/user-manual.html#creating-good-commit-messages
+    sed -i -e 's/^[\t]*//' $temp_history # remove leading tab
+    # if first isn't * there is need to add the first file change
+    # ofcourse if we have it...
+    if [[ $(head -c 1 $temp_history) != "*" ]] && [[ $first_file_changed != "" ]]; then
+      sed -i "1 s/^[ ]/* $first_file_changed/" $temp_history
+    fi
+    #### this could get ugly if we have 2 changes that doesn't have file names in lines...
+
+    # move history to commit msg
+    cat $temp_history >> $temp_commit_msg
+  fi
+
+  ####### stage the changes
+  # only works with adding files. not with removing...
+  # this also adds the files that are not tracked by git in that directory
+  git add $changed_spell_path/*
+  # lets get list of removed files in our spell
+  removed_files_in_spell=$(git diff --summary |grep -E -o "$changed_spell_path.*")
+  # lets remove the files
+  for removed_file in $removed_files_in_spell; do
+    git rm -q $removed_file
+  done
+
+  # now we have staged all changes in path and we can commit
+  git commit -q -F "$temp_commit_msg"
+
+  # do we want to add any costum msg in commit ?
+  if [[ $costum_commit_msg == "yes" ]]; then
+    git commit -q --amend
+  fi
+  # we commit quietly but lets use oneline log to show what we commited
+  # this will show us our last commit in nice oneline form.
+  git log --oneline -1
+
+  #lets clean temp files
+  rm $temp_commit_msg
+  rm $temp_history
 done
 
 
