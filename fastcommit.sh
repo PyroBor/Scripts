@@ -18,9 +18,12 @@
 ## - move the code that could be used in both loops to functions
 ## - handle changes that aren't spell changes but the change is
 ##   is described in ChangeLog
-##   this could be a second for loop. changes could be obtained with:
-##   git diff --numstat |sed -e "s/[0-9]*[\t]*[0-9]*[\t]*//"
-##   search in ChangeLog to get the right msg would be needed!
+##   * this could be a second for loop. changes could be obtained with:
+##     git diff --numstat |sed -e "s/[0-9]*[\t]*[0-9]*[\t]*//"
+##   * search in ChangeLog to get the right msg would be needed!
+##   * also problematic would be the commit of changelog... since
+##     it would be to commit per line.. For single change it would go...
+##
 #---
 
 
