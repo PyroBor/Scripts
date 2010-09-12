@@ -54,10 +54,9 @@ mkdir $TEMP_DIR
 temp_history=$TEMP_DIR/history
 temp_commit_msg=$TEMP_DIR/commit_msg
 
-changed_spells_path_list=$(git diff --dirstat=0 |sed -e "s/.*% //")
-
 
 ###### SPELL COMMIT LOOP
+changed_spells_path_list=$(git diff --dirstat=0 |sed -e "s/.*% //")
 for changed_spell_path in $changed_spells_path_list; do
   changed_spell=$(basename $changed_spell_path)
   changed_section=${changed_spell_path%%/*}
@@ -143,6 +142,12 @@ for changed_spell_path in $changed_spells_path_list; do
   fi
 done
 
-echo "Use 'git log -p origin..@{0}' to check changes before pushing them..."
+
+##### end part
+if [[ $(git log origin..@{0}) == "" ]];then
+  echo "Nothing is commited."
+else
+  echo "Use 'git log -p origin..@{0}' to check changes before pushing them..."
+fi
 
 rm -rf $TEMP_DIR
