@@ -13,8 +13,6 @@
 ##
 ## TODO
 ## - improve multiline commits
-## - get better check  to exclude changes in section in first loop
-##   there are spells == section :(
 ## - move the code that could be used in both loops to functions
 ## - handle changes that aren't spell changes but the change is
 ##   is described in ChangeLog
@@ -95,10 +93,12 @@ temp_commit_msg=$TEMP_DIR/commit_msg
 changed_spells_path_list=$(git diff --dirstat=0 |sed -e "s/.*% //")
 for changed_spell_path in $changed_spells_path_list; do
   changed_spell=$(basename $changed_spell_path)
-  changed_section=${changed_spell_path%%/*}
+  
+  # we will only work wit changed_spells_path_list that have 2 /
+  # so it works with section/spell/ and not with only section/
+  slashes="${changed_spell_path//[^\/]/}"
+  [[ ${#slashes} != 2 ]] && continue
 
-  # primitive check to not commit changes in section/bllll
-  [[ $changed_spell != $changed_section ]] && continue
   ##### get changes form history
   git diff $changed_spell_path/HISTORY > $temp_history
 
