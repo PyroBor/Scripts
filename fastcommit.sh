@@ -36,8 +36,8 @@ commits changes with commit per spell\n
 it uses the first comment in HISTORY file for main commit msg\n\n
 Options:\n
 \t-m|--multiline\t use all the lines in history and make multiline commits\n
-\t-a|--ammend\t ammend costum message in commit msg
-\t-h|--help\t shot this help\n"
+\t-a|--amend\t amend costum message in commit msg\n
+\t-h|--help\t show this help\n"
   echo -e $usage
   exit 1
 }
@@ -62,13 +62,14 @@ function clean_history() {
 }
 
 ##### lets check params
-case $1 in
-  "-m"|"--multiline") mutliline_mode=yes ; shift ;;
-  "-a"|"--ammend") costum_commit_msg=yes ; shift ;;
-  "-h"|"--help")     show_usage ;;
-  *)      echo "Param $1 not recognized."; show_usage ;;
-esac
-
+while [[ "$1" == -* ]]; do
+  case $1 in
+    "-m"|"--multiline") mutliline_mode=yes ; shift ;;
+    "-a"|"--ammend") costum_commit_msg=yes ; shift ;;
+    "-h"|"--help")     show_usage ;;
+    *)      echo "$1 not recognized!"; show_usage ;;
+  esac
+done
 ## vars
 TEMP_DIR="/tmp/$$-fastcommit"
 mkdir $TEMP_DIR
@@ -143,7 +144,7 @@ for changed_spell_path in $changed_spells_path_list; do
 
     # do we want to add any costum msg in commit ?
     if [[ $costum_commit_msg == "yes" ]]; then
-      git commit -q --ammend
+      git commit -q --amend
     fi
     # we commit quietly but lets use oneline log to show what we commited
     # this will show us our last commit in nice oneline form.
