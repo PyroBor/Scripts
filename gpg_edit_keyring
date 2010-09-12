@@ -6,8 +6,6 @@
 ## Script for easy manipulation of gpg keyrings
 ## Basicly so you don't need to remember those gpg comands. 
 ##
-## TODO
-## - beter param checking... maybe getopts
 #---
 
 
@@ -16,11 +14,12 @@
 ## Shows usage
 #---------------------------------------------------------------------
 function show_usage() {
-usage="Usage: $(basename $0) #keyID /path/\n
+usage="Usage: $(basename $0) -k keyring -d/-a/... #keyID \n
+-k|--keyring\t which keyring to edit (without action it will just show keyring)\n
 -d|--delete\t delete selected key from keyring\n
 -a|--add\t add selcted key to keying\n
 -i|--import\t import selected key to keyring\n
--s|--search\t search for key in grimoire\n
+-s|--search\t search for key in subdirectories (doesn't need -k)\n
 -h|--help\t show this help"
 
 echo -e $usage
@@ -101,21 +100,33 @@ function gpg_show_keyring() {
 #---------------------------------------------------------------------
 ## process the params
 #---------------------------------------------------------------------
- while [[ "$1" == -* ]]; do
+##### lets check params
+TEMP_OPTS=$(getopt -o 'k:d:a:i:s:v:h' -l 'keyring:,delete:,add:,import:,\
+search:,view:,help' \
+-n "$(basename $0)" -- "$@")
+if [[ $? != 0 ]]; then  show_usage; exit 3; fi
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP_OPTS"
+unset TEMP_OPTS
+
+while true; do
   case "$1" in
-   "-d"|"--delete")   mode="delete";    shift;;
-   "-a"|"--add")      mode="add";       shift;;
-   "-i"|"--import")   mode="import";    shift;;
-   "-s"|"--search")   mode="search";    shift;;
-   "-v"|"--view")     mode="view";      shift;;
-   "-h"|"--help"|*)   show_usage;       exit 2 ;;
+   "-k"|"--keyring")  mode="view";     keyring=$2 ; shift 2 ;;
+   "-d"|"--delete")   mode="delete";   keyid=$2;    shift 2 ;;
+   "-a"|"--add")      mode="add";      keyid=$2;    shift 2 ;;
+   "-i"|"--import")   mode="import";   keyid=$2;    shift 2 ;;
+   "-s"|"--search")   mode="search";   keyid=$2;    shift 2 ;;
+   "-v"|"--view")     mode="view";     keyring=$2;  shift 2 ;;
+   "-h"|"--help")     show_usage;      exit 2 ;;
+   --)                shift;           break ;;
+   *)                 show_usage;      exit 3 ;;
   esac
 done
 
 case "$mode" in
-  add)    gpg_add_key $1 $2;;
-  delete) gpg_del_key $1 $2;;
-  import) gpg_import_key $1 $2;;
-  search) search_gpg_key $1 $2;;
-  view) gpg_show_keyring $1;;
+  add)    gpg_add_key $keyid $keyring;;
+  delete) gpg_del_key $keyid $keyring;;
+  import) gpg_import_key $keyid $keyring;;
+  search) search_gpg_key $keyid;;
+  view) gpg_show_keyring $keyring;;
 esac
