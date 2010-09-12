@@ -26,15 +26,27 @@
 ##   search in ChangeLog to get the right msg would be needed!
 #---
 
-if [[ -n $1 ]];then
-  echo "Use it in top grimoire directory: $(basename $0)"
-  echo
-  echo "commits changes with commit per spell"
-  echo "it uses the first comment in HISTORY file for main commit msg"
-  echo "others are added in detailed description"
-  echo
+
+#---
+## show help :P
+#---
+function show_usage() {
+  usage="Use it in top grimoire directory: $(basename $0)\n\n
+commits changes with commit per spell\n
+it uses the first comment in HISTORY file for main commit msg\n\n
+Options:\n
+\t-m|--multiline\t use all the lines in history and make multiline commits\n
+\t-h|--help\t shot this help\n"
+  echo -e $usage
   exit 1
-fi
+}
+
+##### lets check params
+case $1 in
+  "-m"|"--multiline") mutliline_mode=yes ; shift ;;
+  "-h"|"--help")     show_usage ;;
+  *)      echo "Param $1 not recognized."; show_usage ;;
+esac
 
 ## vars
 TEMP_DIR="/tmp/$$-fastcommit"
@@ -86,7 +98,7 @@ for changed_spell_path in $changed_spells_path_list; do
 
     ##### multiline commits start here
     # do we have any more lines in temp_history? lets mentioned them in commit msg
-    if [[ $number_of_lines -gt "1" ]]; then
+    if [[ $number_of_lines -gt "1" ]] && [[ $multiline_mode == "yes" ]]; then
       # we don't need main change. since we added it saperatly
       sed -i '1d' $temp_history
       echo  >> $temp_commit_msg # second line is empty:)
