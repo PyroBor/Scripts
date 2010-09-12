@@ -62,6 +62,36 @@ function clean_history() {
   sed -i -e '/^20/d' -e '/^$/d' $file_to_clean
 }
 
+#---
+## Delete temp files
+#---
+function del_temp_files() {
+  #lets clean temp files
+  rm $temp_commit_msg
+  rm $temp_history
+}
+
+#---
+## commit the changes
+## edit the commit msg if that is the case
+## print the oneline log
+##
+#---
+function commit_it() {
+  # now we have staged all changes in path and we can commit
+  git commit -q -F "$temp_commit_msg"
+
+  # do we want to add any costum msg in commit ?
+  if [[ $costum_commit_msg == "yes" ]]; then
+    git commit -q --amend
+  fi
+
+  # we commit quietly but lets use oneline log to show what we commited
+  # this will show us our last commit in nice oneline form.
+  git log --oneline -1
+  
+}
+
 ##### lets check params
 TEMP_OPTS=$(getopt -o mah --long amend,multiline,help \
 -n "$(basename $0)" -- "$@")
@@ -152,21 +182,11 @@ for changed_spell_path in $changed_spells_path_list; do
   for removed_file in $removed_files_in_spell; do
     git rm -q $removed_file
   done
+  
+  # commit, edit and show oneline log
+  commit_it
 
-  # now we have staged all changes in path and we can commit
-  git commit -q -F "$temp_commit_msg"
-
-  # do we want to add any costum msg in commit ?
-  if [[ $costum_commit_msg == "yes" ]]; then
-    git commit -q --amend
-  fi
-  # we commit quietly but lets use oneline log to show what we commited
-  # this will show us our last commit in nice oneline form.
-  git log --oneline -1
-
-  #lets clean temp files
-  rm $temp_commit_msg
-  rm $temp_history
+  del_temp_files
 done
 
 
