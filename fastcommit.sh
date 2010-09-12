@@ -16,7 +16,6 @@
 ## - get better check  to exclude changes in section in first loop
 ##   there are spells == section :(
 ## - move the code that could be used in both loops to functions
-##   * that clean history part
 ## - handle changes that aren't spell changes but the change is
 ##   is described in ChangeLog
 ##   this could be a second for loop. changes could be obtained with:
@@ -38,6 +37,25 @@ Options:\n
 \t-h|--help\t shot this help\n"
   echo -e $usage
   exit 1
+}
+
+#---
+## clean temp file of history or ChangeLog gotten from git diff
+## @param file to clean
+#---
+function clean_history() {
+  local file_to_clean=$1
+  # now we have diff of changes. lets remove those lines that dont have + at the beginning
+  sed -i '/^[^+]/d' $file_to_clean
+  # and those + on the beginning of lines
+  sed -i 's/^+//' $file_to_clean
+  # that one line with ++ on beginning (from diff header)
+  sed -i -e '/^++/d' $file_to_clean
+  # now we really have only the part of the history that was changed
+
+  # we can get rid of that date line & empty lines and one line
+  # this will break in 2100 or if we have time machine :)
+  sed -i -e '/^20/d' -e '/^$/d' $file_to_clean
 }
 
 ##### lets check params
@@ -65,17 +83,9 @@ for changed_spell_path in $changed_spells_path_list; do
   if [[ $changed_spell != $changed_section ]];then
     ##### get changes form history
     git diff $changed_spell_path/HISTORY > $temp_history
-    # now we have diff of changes. lets remove those lines that dont have + at the beginning
-    sed -i '/^[^+]/d' $temp_history
-    # and those + on the beginning of lines
-    sed -i 's/^+//' $temp_history
-    # that one line with ++ on beginning (from diff header)
-    sed -i -e '/^++/d' $temp_history
-    # now we really have only the part of the history that was changed
 
-    # we can get rid of that date line & empty lines and one line
-    # this will break in 2100 or if we have time machine :)
-    sed -i -e '/^20/d' -e '/^$/d' $temp_history
+    # we use function to clean the history file now
+    clean_history $temp_history
 
     # now we really have only changes in $temp_history
     # lets check how many lines of changes is there
