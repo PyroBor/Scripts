@@ -14,6 +14,8 @@
 ## TODO
 ## - improve multiline commits
 ## - move the code that could be used in both loops to functions
+## - interactive mode
+##   * maybe even more queries for interactive mode... but that wouln't be fastcommit anymore:)
 ## - handle changes that aren't spell changes but the change is
 ##   is described in ChangeLog
 ##   * search in ChangeLog to get the right msg would be needed!
@@ -42,6 +44,7 @@ it uses the first comment in HISTORY file for main commit msg
 
 Options:
 \t-m|--multiline\t use all the lines in history and make multiline commits
+\t-i|--interactive\t interactive mode
 \t-a|--amend\t amend costum message in commit msg
 \t-f|--file\t commit also the changed file (under construction/don't use it:)
 \t-h|--help\t show this help"
@@ -67,6 +70,28 @@ function clean_history() {
   # this will break in 2100 or if we have time machine :)
   sed -i -e '/^20/d' -e '/^$/d' $file_to_clean
 }
+#---
+## @param question
+## @param default answer
+##
+## @return 0 on yes
+## @return 1 on no
+##
+## taken from sorcery real_query :) but cut down a bit :)
+#---
+function yes_no_query() {
+  while true; do
+     _response=""
+      echo -e -n "$1 [$2] "
+      read -t 30 -n 1 _response
+      echo
+    _response=${_response:=$2}
+    case  $_response in
+      n|N) return 1 ;;
+      y|Y) return 0 ;;
+    esac
+  done
+}
 
 #---
 ## Delete temp files
@@ -90,6 +115,9 @@ function commit_it() {
   # do we want to add any costum msg in commit ?
   if [[ $costum_commit_msg == "yes" ]]; then
     git commit -q --amend
+  elif [[ $interactive_mode == "yes" ]] &&
+       yes_no_query "Do you want to edit commit msg for spell $changed_spell ?" n; then
+    git commit -q --amend
   fi
 
   # we commit quietly but lets use oneline log to show what we commited
@@ -99,7 +127,7 @@ function commit_it() {
 }
 
 ##### lets check params
-TEMP_OPTS=$(getopt -o mahf -l file,amend,multiline,help \
+TEMP_OPTS=$(getopt -o 'mahfi' -l 'interactive,file,amend,multiline,help' \
 -n "$(basename $0)" -- "$@")
 if [[ $? != 0 ]]; then
   show_usage 5
@@ -112,6 +140,7 @@ while true; do
   case $1 in
     "-m"|"--multiline") mutliline_mode=yes ; shift ;;
     "-a"|"--amend") costum_commit_msg=yes ; shift ;;
+    "-i"|"--interactive") interactive_mode=yes ; shift ;;
     "-f"|"--file") filecommit_mode=yes ; shift ;;
     "-h"|"--help")     show_usage 0 ;;
     --)          shift; break ;;
@@ -136,6 +165,10 @@ for changed_spell_path in $changed_spells_path_list; do
   slashes="${changed_spell_path//[^\/]/}"
   [[ ${#slashes} != 2 ]] && continue
 
+  if [[ $interactive_mode == "yes" ]] &&
+    ! yes_no_query "Do you want to commit changes in spell $changed_spell ?" y; then
+    continue
+  fi
   ##### get changes form history
   git diff $changed_spell_path/HISTORY > $temp_history
 
