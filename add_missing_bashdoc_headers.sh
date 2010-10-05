@@ -14,8 +14,9 @@ function show_usage() {
 usage="Usage:
 $(basename $0) path/to/dir\t\t to edit all files in that dir
 $(basename $0) path/to/file\t\t to edit only that file
-$(basename $0) \t\t\t to edit all files in current dir [$(pwd)]
-$(basename $0) --help|-h\t\t\t show this help
+$(basename $0) \t\t\t\t to edit all files in current dir [$(pwd)]
+$(basename $0) -e|--exclude\t\t exclude regex [$exclude_regex]
+$(basename $0) --help|-h\t\t show this help
 "
 echo -e "$usage"
 }
@@ -80,12 +81,23 @@ function double_sed() {
   sed_script $1
   sed_script $1
 }
+exclude_regex=".git"
+
+TEMP_OPTS=$(getopt -o 'he:' -l 'exclude:,help' \
+-n "$(basename $0)" -- "$@")
+if [[ $? != 0 ]]; then  show_usage; exit 3; fi
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP_OPTS"
+unset TEMP_OPTS
+
 
 # if someone wants to see help lets print it
 while true; do
   case "$1" in
    "-h"|"--help")     show_usage;      exit 2 ;;
-   *)                break ;;
+   "-e"|"--exclude")  exclude_regex="$1"; shift 2;;
+   --)                shift;           break ;;
+    *) show_usage;      exit 3 ;;
   esac
 done
 
@@ -93,10 +105,10 @@ done
 
 if [[ -z $1 ]]; then
   # if there is no param
-  for i in $(find ./*  ! -iname ".git" -type f); do double_sed $i ; done
+  for i in $(find ./*  ! -iname "$exclude_regex" -type f); do double_sed $i ; done
 elif [[ -d $1 ]]; then
   # param is directory
-  for i in $(find $1/*  ! -iname ".git" -type f); do double_sed $i ; done
+  for i in $(find $1/*  ! -iname "$exclude_regex" -type f); do double_sed $i ; done
 elif [[ -f $1 ]]; then
   # param is file
   double_sed $1
