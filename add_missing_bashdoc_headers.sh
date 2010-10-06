@@ -95,7 +95,7 @@ unset TEMP_OPTS
 while true; do
   case "$1" in
    "-h"|"--help")     show_usage;      exit 2 ;;
-   "-e"|"--exclude")  exclude_regex="$1"; shift 2;;
+   "-e"|"--exclude")  exclude_regex="$2"; shift 2;;
    --)                shift;           break ;;
     *) show_usage;      exit 3 ;;
   esac
