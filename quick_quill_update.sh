@@ -40,3 +40,5 @@ quill -u $spell <<<"00y$version
 nabd"
 
 done
+
+echo "'scribe reindex-version' is maybe needed before the cast..."
