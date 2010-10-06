@@ -7,7 +7,7 @@
 function show_usage() {
 usage="Usage: $(basename $0) -v version spells
 
--v|--version\t\t specify version to upgrade [$exclude_regex]
+-v|--version\t\t specify version to upgrade
 -h|--help\t\t show this help
 "
 echo -e "$usage"
