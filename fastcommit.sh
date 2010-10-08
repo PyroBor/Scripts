@@ -138,7 +138,7 @@ unset TEMP_OPTS
 
 while true; do
   case $1 in
-    "-m"|"--multiline") mutliline_mode=yes ; shift ;;
+    "-m"|"--multiline") multiline_mode=yes ; shift ;;
     "-a"|"--amend") costum_commit_msg=yes ; shift ;;
     "-i"|"--interactive") interactive_mode=yes ; shift ;;
     "-f"|"--file") filecommit_mode=yes ; shift ;;
