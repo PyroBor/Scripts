@@ -14,10 +14,11 @@
 ## Shows usage
 #---------------------------------------------------------------------
 function show_usage() {
-usage="Usage: $(basename $0) -k keyring -d/-a/-i #keyID
+usage="Usage: $(basename $0) -k/-m keyring -d/-a/-i #keyID
 -k|--keyring\t which keyring to edit (without action it will just show keyring)
+-m|--minimize\t minimize size of selected keyring
 -d|--delete\t delete selected key from keyring
--a|--add\t add selcted key to keying
+-a|--add\t add selcted key to keyring
 -i|--import\t import selected key to keyring
 -s|--search\t search for key in subdirectories (doesn't need -k)
 -h|--help\t show this help"
@@ -96,13 +97,29 @@ function gpg_show_keyring() {
   gpg --list-options show-keyring $path_to_keyring
 }
 
+#---------------------------------------------------------------------
+## @param path to keyring
+##
+## minimizes the size of the keyring based on Jaka Kranjc command:
+##    find -iname "*.gpg" | while read a; do gpg --no-default-keyring --keyring ./$a \
+##      --export-options export-minimal --output ${a}2 --export;
+##    du -sh ${a} ${a}2; mv ${a}2 ${a}; done
+#---------------------------------------------------------------------
+function gpg_minimize_keyring() {
+ local path_to_keyring=$1
+
+ gpg --no-default-keyring --keyring ./$path_to_keyring \
+      --export-options export-minimal --output ${path_to_keyring}2 --export;
+ mv ${path_to_keyring}2 ${path_to_keyring}
+}
+
 
 #---------------------------------------------------------------------
 ## process the params
 #---------------------------------------------------------------------
 ##### lets check params
-TEMP_OPTS=$(getopt -o 'k:d:a:i:s:v:h' -l 'keyring:,delete:,add:,import:,\
-search:,view:,help' \
+TEMP_OPTS=$(getopt -o 'k:d:a:i:s:v:m:h' -l 'keyring:,delete:,add:,import:,\
+search:,view:,minimize:,help' \
 -n "$(basename $0)" -- "$@")
 if [[ $? != 0 ]]; then  show_usage; exit 3; fi
 # Note the quotes around `$TEMP': they are essential!
@@ -112,6 +129,7 @@ unset TEMP_OPTS
 while true; do
   case "$1" in
    "-k"|"--keyring")  mode="view";     keyring=$2 ; shift 2 ;;
+   "-m"|"--minimize") mode="minimize"  keyring=$2 ; shift 2 ;;
    "-d"|"--delete")   mode="delete";   keyid=$2;    shift 2 ;;
    "-a"|"--add")      mode="add";      keyid=$2;    shift 2 ;;
    "-i"|"--import")   mode="import";   keyid=$2;    shift 2 ;;
@@ -129,4 +147,5 @@ case "$mode" in
   import) gpg_import_key $keyid $keyring;;
   search) search_gpg_key $keyid;;
   view) gpg_show_keyring $keyring;;
+  minimize) gpg_minimize_keyring $keyring
 esac
