@@ -98,9 +98,10 @@ function gpg_resign() {
 
 #   echo $section $spell
 #   echo $gpg_signature
+    [[ -e $git_dir/$section/$spell/$gpg_signature ]] &&
     rm $git_dir/$section/$spell/$gpg_signature
-    gpg --detach-sign /var/spool/sorcery/$SOURCE
-    mv /var/spool/sorcery/$gpg_signature $git_dir/$section/$spell/
+    gpg --detach-sign /var/spool/sorcery/$SOURCE &&
+    mv /var/spool/sorcery/$gpg_signature $git_dir/$section/$spell/ &&
     edit_history_file "$gpg_signature" "$reason"
   )
 }
