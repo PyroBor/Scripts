@@ -37,6 +37,8 @@ function gpg_add_key() {
   local path_to_keyring=$2
   gpg --export-options export-minimal --export --armor $key_to_add |\
     gpg --no-default-keyring --keyring $path_to_keyring --import
+  
+  gpg_minimize_keyring $path_to_keyring
 }
 
 #---------------------------------------------------------------------
@@ -85,6 +87,7 @@ function gpg_import_key() {
   local path_to_keyring=$2
   gpg --import-options import-minimal --no-default-keyring \
       --keyring $path_to_keyring --recv-keys $key_to_import
+  gpg_minimize_keyring $path_to_keyring
 }
 
 #---------------------------------------------------------------------
