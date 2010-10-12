@@ -1,0 +1,30 @@
+#!/bin/bash
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+##
+## rebuils spells that don't have ressurect files
+## for installed spells
+#---
+
+. /etc/sorcery/config
+
+SPELLS=$(get_all_spells_with_status installed|tr '\n' ' ')
+
+for spell in $SPELLS ;do
+if ! can_resurrect $spell "*" > /dev/null; then
+    (
+      load_spell $spell
+      spell_filelist="${spell}_temp_filelist"
+    
+      gaze install-full $spell > $spell_filelist
+      
+      construct_cache_name $INSTALL_CACHE/$SPELL-$VERSION-$HOST CACHE
+      CACHE_COMP=$CACHE$EXTENSION
+      create_cache_archive $spell_filelist $CACHE $CACHE_COMP
+
+      rm $spell_filelist
+    )
+  fi
+done
+
