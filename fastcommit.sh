@@ -179,14 +179,19 @@ for changed_spell_path in $changed_spells_path_list; do
   # lets check how many lines of changes is there
   number_of_lines=$(wc -l $temp_history |cut -d' ' -f 1)
 
-  # the first change in HISTORY that is CHANGED!
-  # It also includes ":" (first change the important change)
-  first_change_in_history=$(grep -E -m1 -o  ":.*" "$temp_history")
-  if [[ $first_change_in_history == "" ]] ; then
-    # we missed change. i guess it doesn't have file in front
+  # first first change is first and the important regardles of file
+  # right?:)
+  # now that we have stripped history we can assume the first line is important change
+  first_changed_line_in_history=$(head -n1 "$temp_history")
+  if echo "$first_changed_line_in_history" |grep -q \* ; then
+    # It also includes ":" (first change the important change)
+    first_change_in_history=$(grep -E -m1 -o  ":.*" "$temp_history")
+  else
+    # if there isnt star in first line we dont have file in importat change
     # lets remove spaces in front and add that : and first change
     first_change_in_history=": $(sed -n -e '1 s/^[\t\ ]*// p' $temp_history)"
   fi
+  # this doesn't work correctly... FIXME
   first_file_changed=$(grep -E -m1 -o  ".*:" "$temp_history")
   first_file_changed=${first_file_changed##* } # we remove that tab and *
 
