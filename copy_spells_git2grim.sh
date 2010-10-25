@@ -24,6 +24,12 @@ grimoire_path="/var/lib/sorcery/codex/test"
 
 for spell in $copy_spells; do
   section=$(codex_get_spell_section_name $spell)
+  if [[ $section ==  "" ]]; then
+    section_path=$(find $git_dir -iname openshot)
+    section_path=${section_path/$git_dir/}
+    section=$(echo $section_path |cut -d/ -f2)
+  fi
+  mkdir -p  $grimoire_path/$section/$spell/ &&
   cp -f $git_dir/$section/$spell/* $grimoire_path/$section/$spell/ &&
   message "copied $git_dir/$section/$spell/* $grimoire_path/$section/$spell/"
 done
