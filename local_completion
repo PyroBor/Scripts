@@ -44,4 +44,5 @@ have gcl && complete -F _installed_spells -o default gcl
 have hashcheck.sh && complete -F _all_spells -o default hashcheck.sh
 have resignsources.sh && complete -F _all_spells -o default resignsources.sh
 
+have copy_spells_git2grim.sh && complete -F _all_spells -o default copy_spells_git2grim.sh
 
