@@ -48,7 +48,7 @@ echo -e "$usage"
 }
 
 
-TEMP_OPTS=$(getopt -o 'gshu:r:d:' -l 'hash,git-dir:,help,gpg,reason:,upstream:' \
+TEMP_OPTS=$(getopt -o 'gshui:r:d:' -l 'hash,git-dir:,help,gpg,ignore,reason:,upstream:' \
 -n "$(basename $0)" -- "$@")
 if [[ $? != 0 ]]; then  show_usage; exit 3; fi
 # Note the quotes around `$TEMP': they are essential!
@@ -63,7 +63,8 @@ while true; do
    "-d"|"--git-dir")  git_dir=$2;             shift 2 ;;
    "-u"|"--upstream") upstream_hash=$2; hash_mode="yes"; shift 2 ;;
    "-s"|"--hash")     hash_mode="yes";        shift;;
-   "-r"|"--reason")   reason=$2;              shift 2;;
+   "-r"|"--reason")   reason="$2";              shift 2;;
+   "-i"|"--ignore")   no_upstream_check="yes"; shift ;;
    "-g"|"--gpg")      gpg_mode="yes";          shift ;;
    --)                                shift;   break ;;
     *)                show_usage;              exit 3 ;;
@@ -150,7 +151,7 @@ function sha512_resum() {
     codex_set_current_spell_by_name $spell
     calc_sha512=$(sha512sum /var/spool/sorcery/$SOURCE | cut -d" " -f1)
     # lets first fix that there shouldn't exist anymore :) ofcorse if it is there
-    sed -i "s/MD5\[0\]=.*/SOURCE_HASH=sha512:$calc_sha512/" $git_dir/$section/$spell/DETAILS
+    sed -i "s/^.*MD5\[0\]=.*/    SOURCE_HASH=sha512:$calc_sha512/" $git_dir/$section/$spell/DETAILS
     # now let (re)edit the SOURCE_HASH
     sed -i "s/SOURCE_HASH=.*/SOURCE_HASH=sha512:$calc_sha512/" $git_dir/$section/$spell/DETAILS
   )
@@ -158,8 +159,8 @@ function sha512_resum() {
 
 
 function modified_details_history() {
- local spell=$1
- local history_reason=$2
+ local spell="$1"
+ local history_reason="$2"
  
  section=$(codex_get_spell_section_name $spell)
 
@@ -171,11 +172,21 @@ function modified_details_history() {
 #---
 function resum_spells() {
   for spell in $@; do
-    upstream_check $spell $upstream_hash
-    if [[ $? == 0 ]]; then
+    summon $spell
+    summon_rc=$?
+    if [[ $no_upstream_check != "yes" ]]; then
+      upstream_check $spell $upstream_hash
+      uc_rc=$?
+      if [[ $uc_rc == 0 ]]; then
+        reason="$reason (checked with upstream $upstream_hash)"
+      fi
+    else
+      uc_rc=0
+    fi
+    if [[ $uc_rc == 0 ]] && [[ $summon_rc == 0 ]]; then
       sha512_resum $spell
                                        # this will be fixed to use $reason
-      modified_details_history $spell "fixed sha512 (sources checked with upstream $upstream_hash)"
+      modified_details_history "$spell" "$reason"
     fi
   done
 }
