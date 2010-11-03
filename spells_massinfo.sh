@@ -15,7 +15,7 @@ for spell in "$@"; do
   (
    codex_set_current_spell_by_name $spell
    ########## edit this line
-   message "|| $spell || $(sources $spell| head -n1) || $VERSION || $WEB_SITE ||  ||"
+   message "|| [[http://www.google.com/search?q=$spell|$spell]] || $VERSION || $WEB_SITE ||  ||"
    #########
   )
 done
