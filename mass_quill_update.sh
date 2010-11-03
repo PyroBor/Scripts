@@ -16,10 +16,14 @@
 ## show help
 #---
 function show_usage() {
-usage="Usage: $(basename $0) -v version spells
+usage="Usage: $(basename $0) spells
+Must use -v or -e to really do something.
 
 -v|--version\t\t specify version to upgrade
 -k|--kde4\t\t update all kde4 spells (check script for list)
+-e|--history\t\t add history entry
+-g|--git-changes\t apply history to all spells changed in grimoire (current dir)
+\t\t\t usefull when there was some massive change in grimoire
 -h|--help\t\t show this help
 "
 echo -e "$usage"
@@ -36,7 +40,7 @@ kde4_spells="$kde4_spells kdeplasmoids4 kdesdk4 kdetoys4 kdeutils4 oxygen-icons 
 # uncoment this line when kdepim and kdepim-runtime get back with normal relases
 # it suppose to be with kde 4.6
 
-TEMP_OPTS=$(getopt -o 'khv:' -l 'kde4,version:,help' \
+TEMP_OPTS=$(getopt -o 'e:kghv:' -l 'git-changeshistory:,kde4,version:,help' \
 -n "$(basename $0)" -- "$@")
 if [[ $? != 0 ]]; then  show_usage; exit 3; fi
 # Note the quotes around `$TEMP': they are essential!
@@ -49,17 +53,20 @@ unset TEMP_OPTS
 while true; do
   case "$1" in
    "-h"|"--help")     show_usage;                    exit 2  ;;
-   "-v"|"--version")  version="$2";                  shift 2 ;;
-   "-k"|"--kde4")     update_spells="$kde4_spells";  shift   ;;
+   "-g"|"--git-changes") git_changes="yes"; shift            ;;
+   "-e"|"--history")  history_line="$2"; mode="history_edit"; shift 2 ;;
+   "-v"|"--version")  version="$2"; mode="version_bump"  shift 2 ;;
+   "-k"|"--kde4")     spells="$kde4_spells";         shift   ;;
    --)                shift;                         break   ;;
     *)                show_usage;                    exit 3  ;;
   esac
 done
 
-echo $version
-if [[ $update_spells == "" ]]; then
-  update_spells="$@"
+if [[ $spells == "" ]]; then
+  spells="$@"
 fi
+
+# just simple functions so the code is nicer
 
 #---
 # current quill work flow
@@ -72,13 +79,40 @@ fi
 # (a)  Copy it under QUILL_GIT_DIR
 # (b)  Copy it back to the grimoire
 # (d)  Quit  -> next spell
-
-
-for spell in $update_spells; do
-
-quill -u $spell <<<"00y$version
+function quill_version_bump() {
+  quill -u $spell <<<"00y$version
 nabd"
+}
 
-done
+function quill_history_edit() {
+  quill -u $spell <<<"11$history_line
 
-echo "'scribe reindex-version' is maybe needed before the cast..."
+
+ad"
+}
+if [[ "$mode" == "version_bump" ]]; then
+
+  for spell in $spells; do
+    quill_version_bump
+  done
+  echo "'scribe reindex-version' is maybe needed before the cast..."
+
+elif [[ "$mode" == "history_edit" ]]; then
+
+  if [[ $git_changes == "yes" ]]; then
+    changed_spells_path_list=$(git diff --dirstat=0 |sed -e "s/.*% //")
+    for changed_spell_path in $changed_spells_path_list; do
+      spell=$(basename $changed_spell_path)
+      quill_history_edit
+    done
+  else
+    for spell in $spells; do
+      quill_history_edit
+    done 
+  fi
+  
+else
+
+  echo "this is script error... "
+  
+fi
