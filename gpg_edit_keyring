@@ -150,5 +150,5 @@ case "$mode" in
   import) gpg_import_key $keyid $keyring;;
   search) search_gpg_key $keyid;;
   view) gpg_show_keyring $keyring;;
-  minimize) gpg_minimize_keyring $keyring
+  minimize) gpg_minimize_keyring $keyring ;;
 esac
