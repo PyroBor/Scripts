@@ -25,6 +25,10 @@ if  [  "$UID"  !=  0  ];  then
 fi
 
 . /etc/sorcery/local/guruinfo
+
+#=============================================
+## some basic vars
+#=============================================
 git_dir="/home/bor/git/grimoire"
 reason=""
 tmp_dir="/tmp/reverify"
@@ -48,9 +52,13 @@ echo -e "$usage"
 }
 
 
-TEMP_OPTS=$(getopt -o 'gshui:r:d:' -l 'hash,git-dir:,help,gpg,ignore,reason:,upstream:' \
+#=============================================
+## param processing
+#=============================================
+
+TEMP_OPTS=$(getopt -o 'gshu:ir:d:' -l 'hash,git-dir:,help,gpg,ignore,reason:,upstream:' \
 -n "$(basename $0)" -- "$@")
-if [[ $? != 0 ]]; then  show_usage; exit 3; fi
+if [[ $? != 0 ]]; then  show_usage; exit 5; fi
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP_OPTS"
 unset TEMP_OPTS
@@ -71,13 +79,13 @@ while true; do
   esac
 done
 
-# we cant do both modes at the same time
-if [[ $hash_mode == "yes" ]]; then
-  gpg_mode="no"
-fi
+#=============================================
+## functions
+#=============================================
 
-
-
+#---
+##simple function to edit to edit HISTORY
+#---
 function edit_history_file() {
   local file_changed="$1"
   local history_line="$2"
@@ -86,8 +94,23 @@ function edit_history_file() {
 }
 
 #---
+## we shouldn't have empty reason so lets set it. if it is empty
+## @Globals reason
+#---
+function check_reason() {
+  if [[ -z $reason ]]
+    if [[ $hash_mode == "yes" ]]; then
+      reason="fixed sha512"
+    elif [[ $gpg_mode == "yes" ]]; then
+      reason="resigned source"
+    fi
+  fi
+}
+
+#---
 ## gpg resign sources and add history entery with $reason
 ## @param spell to resign
+#---
 function gpg_resign() {
   local spell=$1
   section=$(codex_get_spell_section_name $spell)
@@ -185,7 +208,7 @@ function resum_spells() {
     fi
     if [[ $uc_rc == 0 ]] && [[ $summon_rc == 0 ]]; then
       sha512_resum $spell
-                                       # this will be fixed to use $reason
+
       modified_details_history "$spell" "$reason"
     fi
   done
@@ -200,7 +223,18 @@ function resign_spells() {
   done
 }
 
-# lets do the work
+#=============================================
+## lets do the work
+#=============================================
+
+# we cant do both modes at the same time
+if [[ $hash_mode == "yes" ]]; then
+  gpg_mode="no"
+fi
+# check the reason so it is not empty
+check_reason
+
+
 
 if [[ $hash_mode == "yes" ]]; then
   resum_spells $@
