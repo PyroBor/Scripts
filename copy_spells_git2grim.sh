@@ -30,6 +30,7 @@ for spell in $copy_spells; do
     section=$(echo $section_path |cut -d/ -f2)
   fi
   mkdir -p  $grimoire_path/$section/$spell/ &&
-  cp -f $git_dir/$section/$spell/* $grimoire_path/$section/$spell/ &&
+  rm -r $grimoire_path/$section/$spell/* &&
+  cp -fR $git_dir/$section/$spell/* $grimoire_path/$section/$spell/ &&
   message "copied $git_dir/$section/$spell/* $grimoire_path/$section/$spell/"
 done
