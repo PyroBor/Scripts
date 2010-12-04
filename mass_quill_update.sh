@@ -55,7 +55,7 @@ while true; do
    "-h"|"--help")     show_usage;                    exit 2  ;;
    "-g"|"--git-changes") git_changes="yes"; shift            ;;
    "-e"|"--history")  history_line="$2"; mode="history_edit"; shift 2 ;;
-   "-v"|"--version")  version="$2"; mode="version_bump"  shift 2 ;;
+   "-v"|"--version")  version="$2"; mode="version_bump";  shift 2 ;;
    "-k"|"--kde4")     spells="$kde4_spells";         shift   ;;
    --)                shift;                         break   ;;
     *)                show_usage;                    exit 3  ;;
