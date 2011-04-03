@@ -12,6 +12,7 @@ IKNOWWHATIMDOING="no"
 USAGE="USAGE: [OPTIONS]:
 in [] you can see the default settings:
 --season-folder <path/to/season/>\t Unrar files [$season_folder]
+--target-folder <path/to/season/>\t extract them to [$target_folder]
 --del-rars <yes/no>\t\t Delete rar files after unraring [$delrarfiles]
 -y, --i-know-what-i-am-doing \t Just do it! [$IKNOWWHATIMDOING]
 -h, --help \t Shows this help.
@@ -25,6 +26,10 @@ case "$1" in
 	;;
 	"--season-folder")
 		season_folder="$2"
+		shift
+	;;
+		"--target-folder")
+		target_folder="$2"
 		shift
 	;;
 	"--del-rars")
@@ -41,7 +46,7 @@ done
 
 if [[ $IKNOWWHATIMDOING == "no" ]]; then echo -e "$USAGE"; exit 42; fi
 
-
+mkdir -p "$target_folder"
 cd "$season_folder"
 for rar_folder in *; do
 	if [[ -d $rar_folder ]] ; then
