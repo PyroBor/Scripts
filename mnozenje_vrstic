@@ -1,0 +1,15 @@
+#!/bin/bash
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+#---
+
+while read line; do
+  x=1
+  until [[ $x = 49 ]]; do
+	 echo $line
+	 let x++ 
+  done
+done < ucinkovine
+
+unset x
