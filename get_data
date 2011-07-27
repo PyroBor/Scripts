@@ -1,0 +1,39 @@
+#!/bin/bash
+## get data from psych
+
+data_dir="/home/bor/faks/diploma/physprop_data"
+cas_no_file="$data_dir/cas_stevilke.txt"
+csv_file="$data_dir/physprop.csv"
+
+[[ -f $csv_file ]] && rm $csv_file
+
+# download data
+i=1
+while read cas_no ; do
+  if [[ ! -f $data_dir/$cas_no.txt ]]; then
+    elinks -dump http://esc.syrres.com/interkow/webprop.exe?CAS=$cas_no > $data_dir/$cas_no.txt
+    sleep 5
+  fi
+  echo "$i:geting data $cas_no done"
+  let i++
+done < $cas_no_file
+
+#put data in CSV file
+i=1
+while read cas_no ; do
+  if [[ ! -f $data_dir/$cas_no.txt ]] || grep -q "NOT in the PhysProp Database" $data_dir/$cas_no.txt; then
+    echo "$cas_no|NO DATA||" >> $csv_file
+  else
+    cat $data_dir/$cas_no.txt| sed -e '1,11'd -e 's/^.*://' -e 's/^ //' -e '/\[1\]/'q | tr '\n' '|' >> $csv_file && echo >> $csv_file
+  fi
+  echo "$i: writing data $cas_no done"
+  let i++
+done < $cas_no_file
+# mi uporabljamo pike za decimalke.
+sed -i 's/\([0-9]\)\.\([0-9]\)/\1,\2/g' $csv_file
+
+
+
+
+# obabel  "-:c1(c(c[nH]c([nH]1)=O)F)=O" --gen3d -ocdxml -O test2.cdxml
+# while IFS="|" read zu smiles ; do obabel  "-:$smiles" --gen2d -omdl -O "mol/$zu.mol" ;done < spojine_and_smiles
