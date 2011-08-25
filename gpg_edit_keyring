@@ -36,7 +36,7 @@ function gpg_add_key() {
   local key_to_add=$1
   local path_to_keyring=$2
   gpg --export-options export-minimal --export --armor $key_to_add |\
-    gpg --no-default-keyring --keyring $path_to_keyring --import
+    gpg --no-default-keyring --keyring $path_to_keyring --import &&
   
   gpg_minimize_keyring $path_to_keyring
 }
@@ -63,6 +63,7 @@ function gpg_del_key() {
 function search_gpg_key() {
   local key_to_search=$1
   local path_to_grimoire=${2:-`pwd`}
+  found_status="1"
   for gpg_keyring in \
   $(find $path_to_grimoire -mindepth 0 -maxdepth 3 -iname "*.gpg" -printf "%P\n")
   do
@@ -71,9 +72,11 @@ function search_gpg_key() {
     if [[ $first_found != "" ]];then
       echo "Key $key_to_search found in $gpg_keyring:"
       echo $first_found
+      found_status="0"
     fi
     unset first_found
   done
+  exit $found_status
 }
 
 #---------------------------------------------------------------------
@@ -86,7 +89,7 @@ function gpg_import_key() {
   local key_to_import=$1
   local path_to_keyring=$2
   gpg --import-options import-minimal --no-default-keyring \
-      --keyring $path_to_keyring --recv-keys $key_to_import
+      --keyring $path_to_keyring --recv-keys $key_to_import &&
   gpg_minimize_keyring $path_to_keyring
 }
 
@@ -112,7 +115,7 @@ function gpg_minimize_keyring() {
  local path_to_keyring=$1
 
  gpg --no-default-keyring --keyring ./$path_to_keyring \
-      --export-options export-minimal --output ${path_to_keyring}2 --export;
+      --export-options export-minimal --output ${path_to_keyring}2 --export &&
  mv ${path_to_keyring}2 ${path_to_keyring}
 }
 
