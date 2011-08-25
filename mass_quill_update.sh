@@ -40,7 +40,21 @@ kde4_spells="$kde4_spells kdeplasmoids4 kdesdk4 kdetoys4 kdeutils4 oxygen-icons 
 # uncoment this line when kdepim and kdepim-runtime get back with normal relases
 # it suppose to be with kde 4.6
 
-TEMP_OPTS=$(getopt -o 'e:kghv:' -l 'git-changeshistory:,kde4,version:,help' \
+kde47_core="kde4-l10n kdebase4-runtime kde4-workspace kdeaccessibility4 kdeadmin4 kdeartwork4"
+kde47_core="$kde47_core kdelibs4 kdemultimedia4 kdegames4 kdenetwork4 kdepim4 kdepim4-runtime kdepimlibs4"
+kde47_core="$kde47_core kdeplasmoids4 kdesdk4 kdetoys4 kdeutils4 kdewebdev4 oxygen-icons"
+
+
+
+kde47_spells="$kde47_core blinken cantor kde-wallpapers gwenview4 kalgebra kalzium kamera kanagram kate kbruch kcolorchooser kde-baseapps"
+kde47_spells="$kde47_spells  kdegraphics-strigi-analyzer kdegraphics-thumbnailers "
+kde47_spells="$kde47_spells  kgamma kgeography khangman kig kimono kiten klettres kmplot kolourpaint konsole"
+kde47_spells="$kde47_spells korundum kross-interpreters kruler ksaneplugin ksnapshot kstars ktouch kturtle kwordquiz"
+kde47_spells="$kde47_spells libkdcraw4 libkdeedu libkexiv24 libkipi4 libksane marble mobipocket okular  parley"
+kde47_spells="$kde47_spells perlkde perlqt pykde4 qtruby qyoto rocs smokegen smokekde smokeqt step svgpart"
+
+
+TEMP_OPTS=$(getopt -o 'e:kghv:l' -l 'git-changeshistory:,kde4,version:,help,kde47' \
 -n "$(basename $0)" -- "$@")
 if [[ $? != 0 ]]; then  show_usage; exit 3; fi
 # Note the quotes around `$TEMP': they are essential!
@@ -57,6 +71,7 @@ while true; do
    "-e"|"--history")  history_line="$2"; mode="history_edit"; shift 2 ;;
    "-v"|"--version")  version="$2"; mode="version_bump";  shift 2 ;;
    "-k"|"--kde4")     spells="$kde4_spells";         shift   ;;
+   "-l"|"--kde47")	 spells="$kde47_spells";       shift   ;;
    --)                shift;                         break   ;;
     *)                show_usage;                    exit 3  ;;
   esac
@@ -71,7 +86,7 @@ fi
 #---
 # current quill work flow
 #---
-# (0)  The grimoire (copy from)
+# (1)  Git (copy from)
 # (0)  Update the spell to a newer version
 # Do you want to update x.y.z? [y] y
 # $version
@@ -80,15 +95,22 @@ fi
 # (b)  Copy it back to the grimoire
 # (d)  Quit  -> next spell
 function quill_version_bump() {
-  quill -u $spell <<<"00y$version
+  quill -u $spell <<<"10y$version
 nabd"
 }
 
+# (1)  Git (copy from)
+# (1)  Add arbitrary HISTORY entries
+# $history_line What do you want to add?
+# (blank line) What do you want to add? 
+# (n)   Do you want to review the HISTORY changes? [n]
+# (a)  Copy it under QUILL_GIT_DIR
+# (b)  Copy it back to the grimoire
+# (d)  Quit  -> next spell
 function quill_history_edit() {
   quill -u $spell <<<"11$history_line
 
-
-ad"
+nabd"
 }
 if [[ "$mode" == "version_bump" ]]; then
 
