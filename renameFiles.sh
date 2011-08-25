@@ -8,7 +8,7 @@
 ## TODO
 ## - elinks doesn't work anymore with imdb...
 #---
-flags="0tv|n0tv|fqm|xor|2hd|0tv|C4TV|720p|1080p|x264|X264"
+flags="0tv|n0tv|fqm|xor|2hd|0tv|C4TV|720p|1080p|x264|X264|2009"
 wanted_dir="$(pwd)"
 seria="$(basename "$(pwd)")"
 imdb="no"
@@ -60,6 +60,20 @@ without imdb:
 13) Seria 202.avi
 "
 
+
+
+
+## @param dirfile (not yet)
+function maketmpdir (){
+  mkdir -p "/tmp/$seria"
+  TMPDIR="/tmp/$seria"
+}
+
+## del tmp dir at the end
+function cleantmpdir (){
+  rm -rf "$TMPDIR"
+}
+
 ##
 ## @Parm seria
 ## @parm season
@@ -67,8 +81,9 @@ without imdb:
 ## @parm lang
 ##
 function get_subtitles (){
-  local lang=2 #angleščina=2 slovenščina=1 vsi jeziki=0
-  mkdir "$TMPDIR/$season-$episode"
+  local lang=1 #angleščina=2 slovenščina=1 vsi jeziki=0
+  maketmpdir
+  mkdir -p "$TMPDIR/$season-$episode"
   cd "$TMPDIR/$season-$episode"
       # http://www.sub-titles.net/ppodnapisi/search?tbsl=3&asdp=1&sK=boston+legal&sJ=2&sTS=1&sTE=1#
       # http://www.sub-titles.net/ppodnapisi/search?tbsl=3&asdp=1&sK=boston+legal&sJ=2&sO=asc&sS=time
@@ -76,9 +91,9 @@ function get_subtitles (){
   if [ -f "$wanted_dir/$newname_naked.srt" ] && [ $subtitleOW == "no" ]; then
     echo "there are allready one subtitles go with --subtitleOW to overwrite"
   else
-    download_link=$($elinks --dump "http://www.sub-titles.net/ppodnapisi/search?tbsl=3&asdp=1&sK=$seria&sJ=$lang&sTS=$season&sTE=$episode&sO=asc&sS=time" |grep -m1 -E -o  "http://www.sub-titles.net/ppodnapisi/download/i/.*")
+    download_link=$($elinks -source "http://www.sub-titles.net/sl/ppodnapisi/search?tbsl=3&asdp=1&sK=$seria&sJ=$lang&sTS=$season&sTE=$episode&sO=asc&sS=time" |grep -m1 -E -o  "/sl/ppodnapisi/podnapis/i/[0-9a-Z/-]*")
     if [[ "$download_link" != "" ]]; then
-      wget -q  $download_link
+      wget -q  "http://www.sub-titles.net$download_link"
       unzip -qq *.zip
       srt_file=$(find ./ -iname "*.srt" |head -n1)
       #rm *.zip
@@ -90,6 +105,7 @@ function get_subtitles (){
       echo "no subititles found"
     fi
   fi
+  cleantmpdir
   cd "$WORKING_DIR"
 }
 
@@ -103,18 +119,6 @@ function get_imdb_episode_title () {
   episode_title=$(grep "Season $season, Episode $episode:" episodes |sed s/.*:\ //)
   cd "$WORKING_DIR"
 }
-
-## @param dirfile (not yet)
-function maketmpdir (){
-  mkdir "/tmp/$seria"
-  TMPDIR="/tmp/$seria"
-}
-
-## del tmp dir at the end
-function cleantmpdir (){
-  rm -rf "$TMPDIR"
-}
-
 
 ## Parse the command line parameters and arguments via getopt
 TEMP_OPTS=$(getopt -o 's:u:f:F:l_h' -l 'wanted_dir:,seria:,imdb,imdb_url:,subtitle,\
