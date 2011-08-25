@@ -94,6 +94,20 @@ function gpg_import_key() {
 }
 
 #---------------------------------------------------------------------
+## @param keyID
+## @param path to keyring
+##
+## Edit key to selected keyring.
+#---------------------------------------------------------------------
+function gpg_edit_key() {
+  local key_to_edit=$1
+  local path_to_keyring=$2
+  gpg --no-default-keyring --keyring ./$path_to_keyring --edit-key $key_to_edit &&
+  gpg_minimize_keyring ./$path_to_keyring
+}
+
+
+#---------------------------------------------------------------------
 ## @param path to keyring
 ##
 ## Show keys in keyring.
@@ -119,13 +133,24 @@ function gpg_minimize_keyring() {
  mv ./${path_to_keyring}2 ./${path_to_keyring}
 }
 
+#---------------------------------------------------------------------
+## @param path to keyring
+##
+## Show keys in keyring.
+#---------------------------------------------------------------------
+function gpg_show_keyring() {
+  local path_to_keyring=$1
+  gpg --list-options show-keyring ./$path_to_keyring
+}
+
+
 
 #---------------------------------------------------------------------
 ## process the params
 #---------------------------------------------------------------------
 ##### lets check params
-TEMP_OPTS=$(getopt -o 'k:d:a:i:s:v:m:h' -l 'keyring:,delete:,add:,import:,\
-search:,view:,minimize:,help' \
+TEMP_OPTS=$(getopt -o 'k:d:a:i:s:v:m:e:h' -l 'keyring:,delete:,add:,import:,\
+search:,view:,minimize:,edit:,help' \
 -n "$(basename $0)" -- "$@")
 if [[ $? != 0 ]]; then  show_usage; exit 3; fi
 # Note the quotes around `$TEMP': they are essential!
@@ -141,6 +166,7 @@ while true; do
    "-i"|"--import")   mode="import";   keyid=$2;    shift 2 ;;
    "-s"|"--search")   mode="search";   keyid=$2;    shift 2 ;;
    "-v"|"--view")     mode="view";     keyring=$2;  shift 2 ;;
+   "-e"|"--edit")     mode="edit";     keyid=$2;  shift 2 ;;
    "-h"|"--help")     show_usage;      exit 2 ;;
    --)                shift;           break ;;
    *)                 show_usage;      exit 3 ;;
@@ -154,4 +180,5 @@ case "$mode" in
   search) search_gpg_key $keyid;;
   view) gpg_show_keyring $keyring;;
   minimize) gpg_minimize_keyring $keyring ;;
+  edit)  gpg_edit_key $keyid $keyring ;;
 esac
