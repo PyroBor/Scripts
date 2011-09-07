@@ -32,26 +32,12 @@ echo -e "$usage"
 #---
 ## list of all kde4_spells
 #---
-kde4_spells="kdepimlibs4 kde4-l10n kdeaccessibility4 kdeadmin4 kdeartwork4"
-kde4_spells="$kde4_spells kdebase4-runtime kdebase4 kdebase-workspace4 kdebindings4"
-kde4_spells="$kde4_spells kdeedu4 kdegraphics4 kdelibs4 kdemultimedia4 kdenetwork4"
-kde4_spells="$kde4_spells kdeplasmoids4 kdesdk4 kdetoys4 kdeutils4 oxygen-icons kdewebdev4 kdegames4"
-#kde4_spells="$kde4_spells kdepim4 kdepim4-runtime"
-# uncoment this line when kdepim and kdepim-runtime get back with normal relases
-# it suppose to be with kde 4.6
-
-kde47_core="kde4-l10n kdebase4-runtime kde4-workspace kdeaccessibility4 kdeadmin4 kdeartwork4"
-kde47_core="$kde47_core kdelibs4 kdemultimedia4 kdegames4 kdenetwork4 kdepim4 kdepim4-runtime kdepimlibs4"
-kde47_core="$kde47_core kdeplasmoids4 kdesdk4 kdetoys4 kdeutils4 kdewebdev4 oxygen-icons"
-
-
-
 kde47_spells="$kde47_core blinken cantor kde-wallpapers gwenview4 kalgebra kalzium kamera kanagram kate kbruch kcolorchooser kde-baseapps"
 kde47_spells="$kde47_spells  kdegraphics-strigi-analyzer kdegraphics-thumbnailers "
 kde47_spells="$kde47_spells  kgamma kgeography khangman kig kimono kiten klettres kmplot kolourpaint konsole"
 kde47_spells="$kde47_spells korundum kross-interpreters kruler ksaneplugin ksnapshot kstars ktouch kturtle kwordquiz"
 kde47_spells="$kde47_spells libkdcraw4 libkdeedu libkexiv24 libkipi4 libksane marble mobipocket okular  parley"
-kde47_spells="$kde47_spells perlkde perlqt pykde4 qtruby qyoto rocs smokegen smokekde smokeqt step svgpart"
+kde47_spells="$kde47_spells perlkde perlqt4 pykde4 qtruby qyoto rocs smokegen smokekde smokeqt step svgpart"
 
 
 TEMP_OPTS=$(getopt -o 'e:kghv:p' -l 'git-changeshistory:,kde4,version:,help,patchlevel' \
@@ -70,8 +56,7 @@ while true; do
    "-g"|"--git-changes") git_changes="yes"; shift            ;;
    "-e"|"--history")  history_line="$2"; mode="history_edit"; shift 2 ;;
    "-v"|"--version")  version="$2"; mode="version_bump";  shift 2 ;;
-   "-k"|"--kde4")     spells="$kde4_spells";         shift   ;;
-   "-l"|"--kde47")	 spells="$kde47_spells";       shift   ;;
+   "-k"|"--kde4")     spells="$kde47_spells";         shift   ;;
    "-p"|"--patchlevel") mode="increase_patchlevel"; shift ;;
    --)                shift;                         break   ;;
     *)                show_usage;                    exit 3  ;;
