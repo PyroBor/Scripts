@@ -54,7 +54,7 @@ kde47_spells="$kde47_spells libkdcraw4 libkdeedu libkexiv24 libkipi4 libksane ma
 kde47_spells="$kde47_spells perlkde perlqt pykde4 qtruby qyoto rocs smokegen smokekde smokeqt step svgpart"
 
 
-TEMP_OPTS=$(getopt -o 'e:kghv:l' -l 'git-changeshistory:,kde4,version:,help,kde47' \
+TEMP_OPTS=$(getopt -o 'e:kghv:p' -l 'git-changeshistory:,kde4,version:,help,patchlevel' \
 -n "$(basename $0)" -- "$@")
 if [[ $? != 0 ]]; then  show_usage; exit 3; fi
 # Note the quotes around `$TEMP': they are essential!
@@ -72,6 +72,7 @@ while true; do
    "-v"|"--version")  version="$2"; mode="version_bump";  shift 2 ;;
    "-k"|"--kde4")     spells="$kde4_spells";         shift   ;;
    "-l"|"--kde47")	 spells="$kde47_spells";       shift   ;;
+   "-p"|"--patchlevel") mode="increase_patchlevel"; shift ;;
    --)                shift;                         break   ;;
     *)                show_usage;                    exit 3  ;;
   esac
@@ -112,6 +113,22 @@ function quill_history_edit() {
 
 nabd"
 }
+
+#---
+# current quill work flow
+#---
+# (1)  Git (copy from)
+# (2)  Increment/add PATCHLEVEL or SECURITY_PATCH
+# Do you want to do it for X.Y.Z? [y] y
+# Do you want to increment/add PATCHLEVEL? [n] y
+# Do you want to increment/add SECURITY_PATCH? [n] n
+# (a)  Copy it under QUILL_GIT_DIR
+# (b)  Copy it back to the grimoire
+# (d)  Quit  -> next spell
+function quill_increase_patchlevel() {
+  quill -u $spell <<<"12yynabd"
+}
+
 if [[ "$mode" == "version_bump" ]]; then
 
   for spell in $spells; do
@@ -132,6 +149,12 @@ elif [[ "$mode" == "history_edit" ]]; then
       quill_history_edit
     done 
   fi
+  
+elif [[ "$mode" == "increase_patchlevel" ]]; then
+
+  for spell in $spells; do
+    quill_increase_patchlevel
+  done
   
 else
 
