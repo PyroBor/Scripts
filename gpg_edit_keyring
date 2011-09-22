@@ -15,14 +15,14 @@
 #---------------------------------------------------------------------
 function show_usage() {
 usage="Usage: $(basename $0) -k/-m keyring -d/-a/-i #keyID
-\t-k|--keyring\t which keyring to edit (without action it will just show keyring)
-\t-m|--minimize\t minimize size of selected keyring
-\t-d|--delete\t delete selected key from keyring
-\t-a|--add\t add selected key to keyring
-\t-i|--import\t import selected key to keyring
-\t-e|--edit\t edit selected key manualy in keyring
-\t-s|--search\t search for key in subdirectories (doesn't need -k)
-\t-h|--help\t show this help"
+\t-k, --keyring\t which keyring to edit (without action it will just show keyring)
+\t-m, --minimize\t minimize size of selected keyring
+\t-d, --delete\t delete selected key from keyring
+\t-a, --add\t add selected key to keyring
+\t-i, --import\t import selected key to keyring
+\t-e, --edit\t edit selected key manualy in keyring
+\t-s, --search\t search for key in subdirectories (doesn't need -k)
+\t-h, --help\t show this help"
 
 echo -e "$usage"
 }
