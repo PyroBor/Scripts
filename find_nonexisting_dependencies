@@ -1,0 +1,113 @@
+#!/bin/bash
+#---
+## by Bor Kraljič <pyrobor[at]ver[dot]si>
+## Licence is GPL v2 or higher
+##
+## Checks all the DEPENDS files in grimoire and looks if any spell depends
+## on something (spell or provider) that doesn't exists. 
+#---
+
+tmp_file=/tmp/spellist
+grimoire_dir=$(pwd)
+
+
+# let's get sorcery goodies
+. /etc/sorcery/config
+
+#---
+## Shows usage
+#---
+function show_usage() {
+  exit_code=${1:-1}
+  usage="Usage: $(basename $0) options
+  
+Searches for all the spells used in DEPENDS files in path
+and checks if they are existing.
+
+Options:
+\t-g, --grimoire\tset grimoire path [$grimoire_dir]
+\t-h, --help\t show this help"
+  echo -e "$usage"
+  exit $exit_code
+}
+
+
+#---
+## process the params
+#---
+TEMP_OPTS=$(getopt -o 'g:h' -l 'grimoire:,help' -n "$(basename $0)" -- "$@")
+if [[ $? != 0 ]]; then  show_usage; exit 3; fi
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP_OPTS"
+unset TEMP_OPTS
+
+while true; do
+  case "$1" in
+   "-g"|"--grimoire")  grimoire_dir=$2; shift 2 ;;
+   "-h"|"--help")     show_usage;      exit 2 ;;
+   --)                shift;           break ;;
+   *)                 show_usage;      exit 3 ;;
+  esac
+done
+
+
+
+
+# first we need everything that has depends line in DEPENDS file
+find $grimoire_dir/ -iname DEPENDS -exec grep -H -E "depends *[a-Z]+ " {} >> $tmp_file \; &&
+# lets get rid of lines that are comments
+sed -r -i "/[[:space:]]*#/d" $tmp_file &&
+# change more spaces or tab to single space
+sed -r -i "s/[[:space:]]+/ /g" $tmp_file &&
+# change : to " " so we will get the file simpler. 
+sed  -r -i "s/:/ /g"  $tmp_file &&
+#sed -i "s/depends //g" $tmp_file &&
+
+# cat $tmp_file
+echo "lets check files"
+while read file depends spell leftover1 leftover2; do
+
+  # we need one extra hack for spells that have strange DEPENDS lines like:
+  #   gnutls) depends gnutls "--with-ssl=gnutls"
+  # now should work correctly
+  if [[ $spell == depends ]]; then
+    depends=$spell
+    spell=$leftover1
+  fi
+  # just to be sure that everything is ok now
+  if [[ $spell == depends ]]; then
+    echo "Something went wrong with script ($(basename $0))! Problem was caused by ${file/$grimoire_dir/}"
+    continue
+  fi
+
+  # lets first check if "spell" is provider
+  CANDIDATES=$( find_providers $spell)
+  if [[  $CANDIDATES ]] ; then
+    continue
+  fi
+  # lets check if spell it is existing spell
+  # also we don't need that annoying output if spell doesn't exist
+  if codex_does_spell_exist $spell >> /dev/null; then
+    continue
+  fi
+   
+  bogus_spell=$(echo ${file/$grimoire_dir/}|cut -d/ -f3)
+
+  echo "Spell $bogus_spell $depends on $spell that doesn't exist"
+  
+  # lets make a list of broken spells.
+  spells_with_bugs="$spells_with_bugs $bogus_spell"
+  depends_bug=1
+   
+done < $tmp_file
+
+rm $tmp_file
+
+# report spells with problems
+if [[ $depends_bug -lt 1 ]];then
+  echo "No bogus dependency found in $grimoire_dir"
+else
+  echo "The following spells have bogus dependency in their DEPENDS:"
+  echo "$spells_with_bugs"
+fi
+
