@@ -19,12 +19,12 @@ function show_usage() {
 usage="Usage: $(basename $0) spells
 Must use -v or -e to really do something.
 
--v|--version\t\t specify version to upgrade
--k|--kde4\t\t update all kde4 spells (check script for list)
--e|--history\t\t add history entry
--g|--git-changes\t apply history to all spells changed in grimoire (current dir)
+-v, --version\t\t specify version to upgrade
+-k, --kde4\t\t update all kde4 spells (check script for list)
+-e, --history\t\t add history entry
+-g, --git-changes\t apply history to all spells changed in grimoire (current dir)
 \t\t\t usefull when there was some massive change in grimoire
--h|--help\t\t show this help
+-h, --help\t\t show this help
 "
 echo -e "$usage"
 }
