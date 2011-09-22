@@ -36,10 +36,10 @@ function coolsleep {
 USAGE="USAGE:
 --wanted_dir <path>\t Rename files in folder [$wanted_dir]
 -h, --help \t\t Shows this help.
--s|--seria \t\t specify seria name or dirname will be used [$seria]
--l|--links \t\t specify text web browser (links, elinks; others are not tested) [$elinks]
+-s, --seria \t\t specify seria name or dirname will be used [$seria]
+-l, --links \t\t specify text web browser (links, elinks; others are not tested) [$elinks]
 --imdb \t\t\t Enable use of www.imdb.com will use the first hit on search for seria (needs elinks) [$imdb]
--u|--imdb_url \t\t If you seria is not the first hit specify imdb link here [$imdb_url]
+-u, --imdb_url \t\t If you seria is not the first hit specify imdb link here [$imdb_url]
 --selection \t\t what files to use [$selection_of_files]
 --subtitle \t\t toggle download of subtitles [$subtitle]
 --subtitleOW \t\t toggle download of subtitles and overwrite of them [$subtitleOW]
