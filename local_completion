@@ -5,8 +5,6 @@
 ##
 ## bash_completion for my short commands and some guru tools
 ##
-## TODO
-## - more support for guru tools (smgl-diff-keyring)
 #---
 [ -f /etc/bash_completion.d/smgl_completion ] &&
 eval `. /etc/bash_completion.d/smgl_completion`
@@ -40,9 +38,113 @@ have gvs && complete -F _all_spells -o default gvs
 have gh && complete -F _all_spells -o default gh
 have gil && complete -F _installed_spells -o default gil
 have gcl && complete -F _installed_spells -o default gcl
-
-have hashcheck.sh && complete -F _all_spells -o default hashcheck.sh
 have resignsources.sh && complete -F _all_spells -o default resignsources.sh
-
 have copy_spells_git2grim.sh && complete -F _all_spells -o default copy_spells_git2grim.sh
+have spells_massinfo.sh && complete -F _all_spells -o default spells_massinfo.sh
+have git spelllog && complete -F _all_spells -o default git spelllog
 
+# for script find_nonexisting_dependencies
+have find_nonexisting_dependencies &&
+_find_nonexisting_dependencies() {
+    COMPREPLY=()
+    local cur prev
+    _get_comp_words_by_ref cur prev
+
+    if [[ "$cur" == -* ]] ; then
+        COMPREPLY=( $( compgen -W "$( _parse_help "$1" )" -- "$cur" ) )
+    else
+        _filedir
+    fi
+} &&
+complete -F _find_nonexisting_dependencies find_nonexisting_dependencies
+
+#---
+## fastcommit.sh
+## simple completion from help msg
+#---
+have fastcommit.sh &&
+_fastcommit() {
+    COMPREPLY=()
+    local cur prev
+    _get_comp_words_by_ref cur prev
+
+    if [[ "$cur" == -* ]] ; then
+        COMPREPLY=( $( compgen -W "$( _parse_help "$1" )" -- "$cur" ) )
+    fi
+} &&
+complete -F _fastcommit fastcommit.sh
+
+#---
+## hashcheck.sh
+## simple completion from help  msg and spellname after that
+#---
+have hashcheck.sh &&
+_hashcheck() {
+  COMPREPLY=()
+  local cur prev
+  _get_comp_words_by_ref cur prev
+
+    if [[ "$cur" == -* ]] ; then
+        COMPREPLY=( $( compgen -W "$( _parse_help "$1" )" -- "$cur" ) )
+    else
+      _all_spells
+    fi
+} &&
+complete -F _hashcheck hashcheck.sh
+
+#---
+## smgl-keyring-diff
+## complete with gpg keyrings
+#---
+have smgl-keyring-diff &&
+_smgl-keyring-diff() {
+  COMPREPLY=()
+  local cur prev
+  _get_comp_words_by_ref cur prev
+
+  _filedir gpg
+} &&
+complete -F _smgl-keyring-diff smgl-keyring-diff
+
+#---
+## gpg_edit_keyring
+## complete with gpg keyrings
+#---
+have gpg_edit_keyring &&
+_gpg_edit_keyring() {
+  COMPREPLY=()
+  local cur prev
+  _get_comp_words_by_ref cur prev
+
+  if [[ "$cur" == -* ]] ; then
+    COMPREPLY=( $( compgen -W "$( _parse_help "$1" )" -- "$cur" ) )
+  fi
+
+  case $prev in
+    -k|-m|--keyring|--minimize)
+      _filedir gpg
+      ;;
+    -h|--help)
+      return 0
+      ;;
+  esac
+
+} &&
+complete -F _gpg_edit_keyring gpg_edit_keyring
+
+
+#---
+## renameFiles.sh
+## simple completion from help msg
+#---
+have renameFiles.sh &&
+_renamefiles_sh() {
+    COMPREPLY=()
+    local cur prev
+    _get_comp_words_by_ref cur prev
+
+    if [[ "$cur" == -* ]] ; then
+        COMPREPLY=( $( compgen -W "$( _parse_help "$1" )" -- "$cur" ) )
+    fi
+} &&
+complete -F _renamefiles_sh renameFiles.sh
