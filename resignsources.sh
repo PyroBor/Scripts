@@ -41,12 +41,12 @@ mkdir $tmp_dir
 #---
 function show_usage() {
 usage="Usage: $(basename $0) params spells
--d|--git-dir\t\t speficy your git dir (dir to change things) [$git_dir]
--u|--upstream\t\t specify upstream hash (make sure it is source_url.hash) [$upstream_hash]
--s|--hash\t\t work with default upstream hash (md5)
--r|--reason\t\t reason for rehash/resign [$reason]
--g|--gpg\t\t gpg resign [$gpg_mode]
--h|--help\t\t show this help
+-d, --git-dir\t\t speficy your git dir (dir to change things) [$git_dir]
+-u, --upstream\t\t specify upstream hash (make sure it is source_url.hash) [$upstream_hash]
+-s, --hash\t\t work with default upstream hash (md5)
+-r, --reason\t\t reason for rehash/resign [$reason]
+-g, --gpg\t\t gpg resign [$gpg_mode]
+-h, --help\t\t show this help
 "
 echo -e "$usage"
 }
