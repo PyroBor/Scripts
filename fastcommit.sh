@@ -43,11 +43,11 @@ commits changes with commit per spell
 it uses the first comment in HISTORY file for main commit msg
 
 Options:
-\t-m|--multiline\t use all the lines in history and make multiline commits
-\t-i|--interactive\t interactive mode
-\t-a|--amend\t amend costum message in commit msg
-\t-f|--file\t commit also the changed file (under construction/don't use it:)
-\t-h|--help\t show this help"
+\t-m, --multiline\t use all the lines in history and make multiline commits
+\t-i, --interactive\t interactive mode
+\t-a, --amend\t amend costum message in commit msg
+\t-f, --file\t commit also the changed file (under construction/don't use it:)
+\t-h, --help\t show this help"
   echo -e "$usage"
   exit $exit_code
 }
