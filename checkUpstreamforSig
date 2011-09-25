@@ -6,11 +6,6 @@
 #
 . /etc/sorcery/config
 
-CONN_TIMEOUT=30
-TIMEOUT=30  #seconds. gnome.org is shitty and takes at least 20s.
-TRIES=4   #4 tries of TIMEOUT each
-
-
 # paste data even if we interupt withc ctrl-c :)
 trap 'message "${PROBLEM_COLOR}control-c${DEFAULT_COLOR}"; nice_exit 1' INT
 
@@ -26,16 +21,13 @@ function nice_exit() {
   local exit_status=$1
   if [[ $possible_spells == "" ]]; then
     message "${MESSAGE_COLOR}All spells are using upstream signature if it is available!${DEFAULT_COLOR}"
-    set_term_title "success"
+    set_term_title "nothing:)"
   else
       no_possible=$(echo $possible_spells|wc -w)
       message "${PROBLEM_COLOR}The following spells could be converted to upstream signature ($no_possible):${DEFAULT_COLOR}"
       message "${SPELL_COLOR}$possible_spells${DEFAULT_COLOR}"
-#    for broken in $failed_spells; do
-#     message "$broken : $(gaze website $broken| tail -n1)"
-#    done
 
-    set_term_title "Failed"
+    set_term_title "Improvements possible"
   fi
   exit $exit_status
 }
@@ -76,7 +68,7 @@ for spell in $wanted_spells; do
       exit 2
      fi
 
-     if grep -iq (git|scm|cvs|svn|bzr|hg|mercurial|head|trunk|$(date +%Y%m%d)) <<< $VERSION; then
+     if grep -iqE "(git|scm|cvs|svn|bzr|hg|mercurial|head|trunk)" <<< $VERSION; then
       exit 3
      fi
      
