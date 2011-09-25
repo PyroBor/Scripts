@@ -22,6 +22,8 @@ Must use -v or -e to really do something.
 -v, --version\t\t specify version to upgrade
 -k, --kde4\t\t update all kde4 spells (check script for list)
 -e, --history\t\t add history entry
+-p, --patchlevel\t\t increase patchlevel for all the spells
+-s, --signature\t\t convert to upstream gpg signature checking
 -g, --git-changes\t apply history to all spells changed in grimoire (current dir)
 \t\t\t usefull when there was some massive change in grimoire
 -h, --help\t\t show this help
@@ -40,7 +42,7 @@ kde47_spells="$kde47_spells libkdcraw4 libkdeedu libkexiv24 libkipi4 libksane ma
 kde47_spells="$kde47_spells perlkde perlqt4 pykde4 qtruby qyoto rocs smokegen smokekde smokeqt step svgpart"
 
 
-TEMP_OPTS=$(getopt -o 'e:kghv:p' -l 'git-changeshistory:,kde4,version:,help,patchlevel' \
+TEMP_OPTS=$(getopt -o 'e:kghv:ps' -l 'git-changeshistory:,kde4,version:,help,patchlevel,signature' \
 -n "$(basename $0)" -- "$@")
 if [[ $? != 0 ]]; then  show_usage; exit 3; fi
 # Note the quotes around `$TEMP': they are essential!
@@ -56,6 +58,7 @@ while true; do
    "-g"|"--git-changes") git_changes="yes"; shift            ;;
    "-e"|"--history")  history_line="$2"; mode="history_edit"; shift 2 ;;
    "-v"|"--version")  version="$2"; mode="version_bump";  shift 2 ;;
+   "-s"|"--signature") mode="upstream_sig" ; shift ;;
    "-k"|"--kde4")     spells="$kde47_spells";         shift   ;;
    "-p"|"--patchlevel") mode="increase_patchlevel"; shift ;;
    --)                shift;                         break   ;;
@@ -114,6 +117,20 @@ function quill_increase_patchlevel() {
   quill -u $spell <<<"12yynabd"
 }
 
+#         (1)  QUILL_GIT_DIR
+#         (3)  Switch to upstream gpg verification
+# Do you want to do it for 1.3.3e? [y]y
+# Is ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.3e.tar.bz2.asc the proper signature url? [y] y
+# Is the appropriate keyring already in the grimoire? [n] n
+# Is there a more complete keyring available? [y] n
+# Do you want to try if the new verification system works? [y] n (We will copy it and use hashcheck script to test)
+# (a)  Copy it under QUILL_GIT_DIR
+# (b)  Copy it back to the grimoire
+# (d)  Quit  -> next spell
+function quill_convert_to_upstream_signature() {
+  quill -u $spell <<<"13yynnnabd"
+}
+
 if [[ "$mode" == "version_bump" ]]; then
 
   for spell in $spells; do
@@ -141,6 +158,12 @@ elif [[ "$mode" == "increase_patchlevel" ]]; then
     quill_increase_patchlevel
   done
   
+elif [[ "$mode" == "upstream_sig" ]]; then
+
+  for spell in $spells; do
+    quill_convert_to_upstream_signature
+  done
+
 else
 
   echo "this is script error... "
