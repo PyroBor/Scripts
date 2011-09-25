@@ -1,0 +1,110 @@
+#!/bin/bash
+# by Bor Kraljič <pyrobor[at]ver[dot]si>
+#
+#
+# checks upstream if there is a possibility to convert spell to upstream signature
+#
+. /etc/sorcery/config
+
+CONN_TIMEOUT=30
+TIMEOUT=30  #seconds. gnome.org is shitty and takes at least 20s.
+TRIES=4   #4 tries of TIMEOUT each
+
+
+# paste data even if we interupt withc ctrl-c :)
+trap 'message "${PROBLEM_COLOR}control-c${DEFAULT_COLOR}"; nice_exit 1' INT
+
+function show_usage() {
+usage="${MESSAGE_COLOR}Usage: ${SPELL_COLOR}$(basename $0) ${FILE_COLOR}spell(s)
+${MESSAGE_COLOR} -s, --section <section> to check whole section
+ -g, --grimoire <grimoire> to check whole grimoire
+ -h, --help\t\t show this help ${DEFAULT_COLOR}"
+message "$usage"
+}
+
+function nice_exit() {
+  local exit_status=$1
+  if [[ $possible_spells == "" ]]; then
+    message "${MESSAGE_COLOR}All spells are using upstream signature if it is available!${DEFAULT_COLOR}"
+    set_term_title "success"
+  else
+      no_possible=$(echo $possible_spells|wc -w)
+      message "${PROBLEM_COLOR}The following spells could be converted to upstream signature ($no_possible):${DEFAULT_COLOR}"
+      message "${SPELL_COLOR}$possible_spells${DEFAULT_COLOR}"
+#    for broken in $failed_spells; do
+#     message "$broken : $(gaze website $broken| tail -n1)"
+#    done
+
+    set_term_title "Failed"
+  fi
+  exit $exit_status
+}
+
+## Parse the command line parameters and arguments via getopt
+TEMP_OPTS=$(getopt -o 's:g:h' -l 'section:,grimoire:,help' \
+-n "$(basename $0)" -- "$@")
+if [[ $? != 0 ]]; then  show_usage; exit 3; fi
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP_OPTS"
+unset TEMP_OPTS
+
+
+while true; do
+  case "$1" in
+     "-s"|"--section")  wanted_spells=$(codex_get_spells_in_section $(codex_find_section_by_name $2)|cut -f8 -d/);      shift 2;;
+     "-g"|"--grimoire")  wanted_spells=$(codex_get_all_spells $(codex_find_grimoire $2)| cut -f8 -d/);          shift 2;;
+     "-h"|"--help") show_usage; exit 2 ;;
+     --) shift ; break ;;
+     *) show_usage; exit 3 ;;
+  esac
+done
+
+
+if [[ $wanted_spells == "" ]]; then
+  wanted_spells="$@"
+fi
+
+checked=1
+total_spells=$(echo $wanted_spells| wc -w)
+for spell in $wanted_spells; do
+   set_term_title "Checking $spell  ($checked of $total_spells)"
+   message -n "${MESSAGE_COLOR}Checking for upstream key of ${SPELL_COLOR}$spell${MESSAGE_COLOR} :"
+   (
+     codex_set_current_spell_by_name $spell
+
+     if grep -iq UPSTREAM_KEY <<< $SOURCE_GPG; then
+      exit 2
+     fi
+
+     if grep -iq (git|scm|cvs|svn|bzr|hg|mercurial|head|trunk|$(date +%Y%m%d)) <<< $VERSION; then
+      exit 3
+     fi
+     
+     for suffix in sig asc sign; do
+        if url_verify "$SOURCE_URL.$suffix" &> /dev/null; then
+          exit 0
+#           new_su="$su.$suffix"
+#           new_source="$source.$suffix"
+        fi
+     done
+     
+    exit 1
+   )
+   subshell_rc=$?
+
+   case $subshell_rc in
+     0) message "\t${PROBLEM_COLOR}It could be converted to upstream key${MESSAGE_COLOR}"
+       possible_spells="$possible_spells $spell"
+       ;;
+     1) message "\tSig not found" ;;
+     2) message "\talready using upstream signature." ;;
+     3) message "\tSCM version.";;
+     *) message "something strange in subshell" ;;
+   esac
+   
+
+   checked=$(( $checked + 1 ))
+done
+
+nice_exit 0
+
