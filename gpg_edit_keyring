@@ -39,7 +39,8 @@ function gpg_add_key() {
   gpg --export-options export-minimal --export --armor $key_to_add |\
     gpg --no-default-keyring --keyring ./$path_to_keyring --import &&
   
-  gpg_minimize_keyring $path_to_keyring
+  gpg_minimize_keyring ./$path_to_keyring
+
 }
 
 #---------------------------------------------------------------------
@@ -53,6 +54,7 @@ function gpg_del_key() {
   local path_to_keyring=$2
   gpg --batch --yes --no-default-keyring  --keyring ./$path_to_keyring \
       --delete-keys $key_to_delete
+  clean_tmp_keyring
 }
 
 #---------------------------------------------------------------------
@@ -92,6 +94,7 @@ function gpg_import_key() {
   gpg --import-options import-minimal --no-default-keyring \
       --keyring ./$path_to_keyring --recv-keys $key_to_import &&
   gpg_minimize_keyring ./$path_to_keyring
+  
 }
 
 #---------------------------------------------------------------------
@@ -132,6 +135,8 @@ function gpg_minimize_keyring() {
  gpg --no-default-keyring --keyring ./$path_to_keyring \
       --export-options export-minimal --output ./${path_to_keyring}2 --export &&
  mv ./${path_to_keyring}2 ./${path_to_keyring}
+ 
+ clean_tmp_keyring ./${path_to_keyring}
 }
 
 #---------------------------------------------------------------------
@@ -145,6 +150,14 @@ function gpg_show_keyring() {
 }
 
 
+#---------------------------------------------------------------------
+## @param path to keyring
+##
+## removes keyring.gpg~ if it is there
+#---------------------------------------------------------------------
+function clean_tmp_keyring() {
+  rm -f "$path_to_keyring~"
+}
 
 #---------------------------------------------------------------------
 ## process the params
