@@ -73,7 +73,7 @@ fi
 # just simple functions so the code is nicer
 
 #---
-# current quill work flow
+## quill_version_bump
 #---
 # (1)  Git (copy from)
 # (0)  Update the spell to a newer version
@@ -88,6 +88,9 @@ function quill_version_bump() {
 nabd"
 }
 
+#---
+## quill_history_edit
+#---
 # (1)  Git (copy from)
 # (1)  Add arbitrary HISTORY entries
 # $history_line What do you want to add?
@@ -103,7 +106,7 @@ nabd"
 }
 
 #---
-# current quill work flow
+## quill_increase_patchlevel
 #---
 # (1)  Git (copy from)
 # (2)  Increment/add PATCHLEVEL or SECURITY_PATCH
@@ -117,18 +120,23 @@ function quill_increase_patchlevel() {
   quill -u $spell <<<"12yynabd"
 }
 
+#---
+## quill_convert_to_upstream_signature
+#---
 #         (1)  QUILL_GIT_DIR
 #         (3)  Switch to upstream gpg verification
 # Do you want to do it for 1.3.3e? [y]y
 # Is ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.3e.tar.bz2.asc the proper signature url? [y] y
 # Is the appropriate keyring already in the grimoire? [n] n
 # Is there a more complete keyring available? [y] n
+# Do you want to remove old signatures (if there are any)? [y]
+# Do you want to do it interactively? [y] n
 # Do you want to try if the new verification system works? [y] n (We will copy it and use hashcheck script to test)
 # (a)  Copy it under QUILL_GIT_DIR
 # (b)  Copy it back to the grimoire
 # (d)  Quit  -> next spell
 function quill_convert_to_upstream_signature() {
-  quill -u $spell <<<"13yynnnabd"
+  quill -u $spell <<<"13yynnynnabd"
 }
 
 if [[ "$mode" == "version_bump" ]]; then
