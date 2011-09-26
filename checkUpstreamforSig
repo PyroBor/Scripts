@@ -64,6 +64,11 @@ for spell in $wanted_spells; do
    (
      codex_set_current_spell_by_name $spell
 
+     if [[ $SOURCE_URL == "" ]];then
+      exit 5
+     fi
+
+
      if grep -iq UPSTREAM_KEY <<< $SOURCE_GPG; then
       exit 2
      fi
@@ -91,7 +96,8 @@ for spell in $wanted_spells; do
      1) message "\tSig not found" ;;
      2) message "\talready using upstream signature." ;;
      3) message "\tSCM version.";;
-     *) message "something strange in subshell" ;;
+     5) message "\tno SOURCE_URL.";;
+     *) message "\t!!!something strange in subshell!!!" ;;
    esac
    
 
