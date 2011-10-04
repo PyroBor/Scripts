@@ -4,10 +4,13 @@
 ## Licence is GPL v2 or higher
 ##
 ## Checks all the DEPENDS files in grimoire and looks if any spell depends
-## on something (spell or provider) that doesn't exists. 
+## on something (spell or provider) that doesn't exists.
+##
+## TODO
+## * improve sub_depends handling
 #---
 
-tmp_file=/tmp/spellist
+tmp_file=/tmp/spellist.$$
 grimoire_dir=$(pwd)
 
 
@@ -51,21 +54,27 @@ while true; do
 done
 
 
-
+echo "Temp file is: $tmp_file"
 
 # first we need everything that has depends line in DEPENDS file
-find $grimoire_dir/ -iname DEPENDS -exec grep -H -E "depends *[a-Z]+ " {} >> $tmp_file \; &&
+find $grimoire_dir/ -iname DEPENDS -exec grep -H -E "depends[[:space:]]+[a-Z0-9_-]+ " {} \; >> $tmp_file &&
 # lets get rid of lines that are comments
 sed -r -i "/[[:space:]]*#/d" $tmp_file &&
 # change more spaces or tab to single space
 sed -r -i "s/[[:space:]]+/ /g" $tmp_file &&
 # change : to " " so we will get the file simpler. 
 sed  -r -i "s/:/ /g"  $tmp_file &&
-#sed -i "s/depends //g" $tmp_file &&
+# nasty hack to remove "BLAAA BLAAA" -> spaces_var...
+# I hope only sub dependencies and comments are like that
+# BUT IT WOULD NEED IMPROVEMENT
+sed -i 's,\([^"]*\)"\([^"]*\)"\([^"]*$\),\1spaces_var\3,g' $tmp_file &&
+
 
 # cat $tmp_file
 echo "lets check files"
-while read file depends spell leftover1 leftover2; do
+while read file depends spell leftover1 leftover2 leftover3; do
+
+
 
   # we need one extra hack for spells that have strange DEPENDS lines like:
   #   gnutls) depends gnutls "--with-ssl=gnutls"
@@ -74,6 +83,19 @@ while read file depends spell leftover1 leftover2; do
     depends=$spell
     spell=$leftover1
   fi
+  
+  # sub dependencies bla/bla/bla depends -sub spaces_var spell blabla
+  #                  file depends  spell leftover1 leftover2 leftover3
+  # not working correctly
+  if [[ $spell == "-sub" ]]; then
+    depends="sub_depends"
+    spell=$leftover2
+  fi
+  if [[ $spell == "sub_depends" ]];then
+    depends="sub_depends"
+    spell=$leftover1
+  fi
+
   # just to be sure that everything is ok now
   if [[ $spell == depends ]]; then
     echo "Something went wrong with script ($(basename $0))! Problem was caused by ${file/$grimoire_dir/}"
