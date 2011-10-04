@@ -3,6 +3,8 @@
 ## by Bor Kraljič <pyrobor[at]ver[dot]si>
 ## Licence is GPL v2 or higher
 ##
+## find Nonexisting Dependencies
+##
 ## Checks all the DEPENDS files in grimoire and looks if any spell depends
 ## on something (spell or provider) that doesn't exists.
 ##
