@@ -18,6 +18,7 @@ usage="Usage: $(basename $0) -k/-m keyring -d/-a/-i #keyID
 \t-k, --keyring\t which keyring to edit (without action it will just show keyring)
 \t-m, --minimize\t minimize size of selected keyring
 \t-d, --delete\t delete selected key from keyring
+\t-2, --duplicates\t search for duplicate keys in grimoire
 \t-a, --add\t add selected key to keyring
 \t-i, --import\t import selected key to keyring
 \t-e, --edit\t edit selected key manualy in keyring
@@ -59,27 +60,35 @@ function gpg_del_key() {
 
 #---------------------------------------------------------------------
 ## @param keyID
-## @param path to grimoire
+## @param path to grimoire (default is $(pwd))
 ##
-## Search for keyID in all "*.gpg" files in grimoire path. 
+## Search for keyID in all "*.gpg" files in grimoire path
+## Return number of matches if we are in duplicates mode
 #---------------------------------------------------------------------
 function search_gpg_key() {
   local key_to_search=$1
   local path_to_grimoire=${2:-`pwd`}
-  found_status="1"
+  found_status="0"
   for gpg_keyring in \
   $(find $path_to_grimoire -mindepth 0 -maxdepth 3 -iname "*.gpg" -printf "%P\n")
   do
     first_found=$(gpg --batch --list-options show-keyring $gpg_keyring \
                   2> /dev/null |grep "$key_to_search"|head -n1)
     if [[ $first_found != "" ]];then
-      echo "Key $key_to_search found in $gpg_keyring:"
+      echo -n "$key_to_search: $gpg_keyring: "
       echo $first_found
-      found_status="0"
+      let found_status++
     fi
     unset first_found
   done
-  exit $found_status
+  
+  if [[ $mode == duplicates ]];then
+    return $found_status
+  elif [[ $found_status == 0 ]];then
+    exit 1
+  else
+    exit 0
+  fi
 }
 
 #---------------------------------------------------------------------
@@ -141,6 +150,28 @@ function gpg_minimize_keyring() {
 
 #---------------------------------------------------------------------
 ## @param path to keyring
+## @param path to grimoire (default is $(pwd))
+##
+## Searches the duplicates key from one keyring in other keyrings..
+#---------------------------------------------------------------------
+function gpg_find_duplicates() {
+  local path_to_keyring=$1
+  local path_to_grimoire=${2:-`pwd`}
+
+  echo $1 ${2}
+  for keyid in $(gpg --list-options show-keyring ./$path_to_keyring |grep "^pub" |cut -d/ -f2| cut -d" " -f1|tr "\n" " "); do
+    search_gpg_key $keyid &> /dev/null
+    local search_rc=$?
+    if [[ $search_rc -gt 1 ]]; then
+      echo "$keyid is in more keyings ($search_rc):"
+      search_gpg_key $keyid
+    fi
+  done
+
+}
+
+#---------------------------------------------------------------------
+## @param path to keyring
 ##
 ## Show keys in keyring.
 #---------------------------------------------------------------------
@@ -163,8 +194,8 @@ function clean_tmp_keyring() {
 ## process the params
 #---------------------------------------------------------------------
 ##### lets check params
-TEMP_OPTS=$(getopt -o 'k:d:a:i:s:v:m:e:h' -l 'keyring:,delete:,add:,import:,\
-search:,view:,minimize:,edit:,help' \
+TEMP_OPTS=$(getopt -o 'k:d:a:i:s:v:m:e:h2:' -l 'keyring:,delete:,add:,import:,\
+search:,view:,minimize:,edit:,help,duplicates:' \
 -n "$(basename $0)" -- "$@")
 if [[ $? != 0 ]]; then  show_usage; exit 3; fi
 # Note the quotes around `$TEMP': they are essential!
@@ -180,6 +211,7 @@ while true; do
    "-i"|"--import")   mode="import";   keyid=$2;    shift 2 ;;
    "-s"|"--search")   mode="search";   keyid=$2;    shift 2 ;;
    "-v"|"--view")     mode="view";     keyring=$2;  shift 2 ;;
+   "-2"|"--duplicates") mode="duplicates" ; keyring=$2; shift 2 ;;
    "-e"|"--edit")     mode="edit";     keyid=$2;  shift 2 ;;
    "-h"|"--help")     show_usage;      exit 2 ;;
    --)                shift;           break ;;
@@ -191,6 +223,7 @@ case "$mode" in
   add)    gpg_add_key $keyid $keyring;;
   delete) gpg_del_key $keyid $keyring;;
   import) gpg_import_key $keyid $keyring;;
+  duplicates) gpg_find_duplicates $keyring;;
   search) search_gpg_key $keyid;;
   view) gpg_show_keyring $keyring;;
   minimize) gpg_minimize_keyring $keyring ;;
