@@ -68,15 +68,14 @@ sed -r -i "s/[[:space:]]+/ /g" $tmp_file &&
 sed  -r -i "s/:/ /g"  $tmp_file &&
 # nasty hack to remove "BLAAA BLAAA" -> spaces_var...
 # I hope only sub dependencies and comments are like that
-# BUT IT WOULD NEED IMPROVEMENT
-sed -i 's,\([^"]*\)"\([^"]*\)"\([^"]*$\),\1spaces_var\3,g' $tmp_file &&
-
+# BUT IT WOULD NEED IMPROVEMENT (one for "BLA BLA" and one for 'BLA BLA')
+# this brings problems if spell is quoted. But there is only one such spell (e-emotion)
+sed -r -i 's,([^"]*)"([^"]+)"([^"]*),\1spaces_var\3,g' $tmp_file &&
+sed -r -i "s,([^']*)'([^']+)'([^']*),\1spaces_var\3,g" $tmp_file &&
 
 # cat $tmp_file
 echo "lets check files"
 while read file depends spell leftover1 leftover2 leftover3; do
-
-
 
   # we need one extra hack for spells that have strange DEPENDS lines like:
   #   gnutls) depends gnutls "--with-ssl=gnutls"
@@ -93,6 +92,7 @@ while read file depends spell leftover1 leftover2 leftover3; do
     depends="sub_depends"
     spell=$leftover2
   fi
+
   if [[ $spell == "sub_depends" ]];then
     depends="sub_depends"
     spell=$leftover1
@@ -102,6 +102,15 @@ while read file depends spell leftover1 leftover2 leftover3; do
   if [[ $spell == depends ]]; then
     echo "Something went wrong with script ($(basename $0))! Problem was caused by ${file/$grimoire_dir/}"
     continue
+  fi
+
+  # if is_enabled_depends blablala
+  if [[ $spell == "\$SPELL" ]]; then
+      spell=$(echo ${file/$grimoire_dir/}|cut -d/ -f3)
+  fi
+
+  if [[ $spell == "spaces_var" ]];then
+    spell=$leftover1 
   fi
 
   # lets first check if "spell" is provider
