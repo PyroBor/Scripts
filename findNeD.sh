@@ -59,19 +59,23 @@ done
 echo "Temp file is: $tmp_file"
 
 # first we need everything that has depends line in DEPENDS file
-find $grimoire_dir/ -iname DEPENDS -exec grep -H -E "depends[[:space:]]+[a-Z0-9_-]+ " {} \; >> $tmp_file &&
+find $grimoire_dir/ -iname DEPENDS -exec grep -H -E "depends[[:space:]]+[\"\'a-Z0-9_-]+ " {} \; >> $tmp_file &&
+echo "temp file filled... Letc clean it"
 # lets get rid of lines that are comments
 sed -r -i "/[[:space:]]*#/d" $tmp_file &&
 # change more spaces or tab to single space
 sed -r -i "s/[[:space:]]+/ /g" $tmp_file &&
 # change : to " " so we will get the file simpler. 
 sed  -r -i "s/:/ /g"  $tmp_file &&
+# remove \ 
+sed  -i 's/\\/ /g' $tmp_file &&
+
 # nasty hack to remove "BLAAA BLAAA" -> spaces_var...
 # I hope only sub dependencies and comments are like that
 # BUT IT WOULD NEED IMPROVEMENT (one for "BLA BLA" and one for 'BLA BLA')
 # this brings problems if spell is quoted. But there is only one such spell (e-emotion)
-sed -r -i 's,([^"]*)"([^"]+)"([^"]*),\1spaces_var\3,g' $tmp_file &&
-sed -r -i "s,([^']*)'([^']+)'([^']*),\1spaces_var\3,g" $tmp_file &&
+# sed -r -i 's,([^"]*)"([A-Z1-9\ ]+)"([^"]*),\1SUB_DEPENDENCIES\3,g' $tmp_file &&
+# sed -r -i "s,([^']*)'([A-Z1-9\ ]+)'([^']*),\1SUB_DEPENDENCIES\3,g" $tmp_file &&
 
 # cat $tmp_file
 echo "lets check files"
@@ -84,19 +88,28 @@ while read file depends spell leftover1 leftover2 leftover3; do
     depends=$spell
     spell=$leftover1
   fi
+
+  # depends must be known now!
+  if [[ ! $depends =~ (depends) ]];then
+    continue
+  fi
+
+
   
   # sub dependencies bla/bla/bla depends -sub spaces_var spell blabla
   #                  file depends  spell leftover1 leftover2 leftover3
   # not working correctly
-  if [[ $spell == "-sub" ]]; then
-    depends="sub_depends"
-    spell=$leftover2
-  fi
-
-  if [[ $spell == "sub_depends" ]];then
-    depends="sub_depends"
-    spell=$leftover1
-  fi
+   if [[ $spell == "-sub" ]]; then
+     depends="sub_depends"
+     spell=$leftover2
+     continue
+   fi
+   
+   if [[ $spell == "sub_depends" ]];then
+     depends="sub_depends"
+     spell=$leftover1
+     continue
+   fi
 
   # just to be sure that everything is ok now
   if [[ $spell == depends ]]; then
@@ -104,14 +117,18 @@ while read file depends spell leftover1 leftover2 leftover3; do
     continue
   fi
 
-  # if is_enabled_depends blablala
+#    if [[ $spell == "SUB_DEPENDENCIES" ]];then
+#      spell=$leftover1
+#    fi
+
+  # lets clean spell now
   if [[ $spell == "\$SPELL" ]]; then
       spell=$(echo ${file/$grimoire_dir/}|cut -d/ -f3)
   fi
+  spell=${spell//\"/}
+  spell=${spell//\'/}
+  
 
-  if [[ $spell == "spaces_var" ]];then
-    spell=$leftover1 
-  fi
 
   # lets first check if "spell" is provider
   CANDIDATES=$( find_providers $spell)
