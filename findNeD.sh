@@ -15,9 +15,27 @@
 tmp_file=/tmp/spellist.$$
 grimoire_dir=$(pwd)
 
+# paste data even if we interupt withc ctrl-c :)
+trap 'message "${PROBLEM_COLOR}control-c${DEFAULT_COLOR}"; clean_exit 1' INT
 
 # let's get sorcery goodies
 . /etc/sorcery/config
+
+function clean_exit() {
+  rc=$1
+  rm $tmp_file
+
+  # report spells with problems
+  if [[ $depends_bug -lt 1 ]];then
+    echo "No bogus dependency found in $grimoire_dir"
+    rc=${rc:-0}
+  else
+    echo "The following spells have bogus dependency in their DEPENDS ($(echo $spells_with_bugs|wc -w)):"
+    echo "$spells_with_bugs"
+    rc=${rc:-1}
+  fi
+  exit $rc
+}
 
 #---
 ## Shows usage
@@ -59,8 +77,8 @@ done
 echo "Temp file is: $tmp_file"
 
 # first we need everything that has depends line in DEPENDS file
-find $grimoire_dir/ -iname DEPENDS -exec grep -H -E "depends[[:space:]]+[\"\'a-Z0-9_-]+ " {} \; >> $tmp_file &&
-echo "temp file filled... Letc clean it"
+find $grimoire_dir/ -iname DEPENDS -exec grep -H -E "depends[[:space:]]+[\"\'a-Z0-9_-]+([[:space:]]|$)" {} \; >> $tmp_file &&
+echo "temp file filled... Lets clean it"
 # lets get rid of lines that are comments
 sed -r -i "/[[:space:]]*#/d" $tmp_file &&
 # change more spaces or tab to single space
@@ -78,7 +96,7 @@ sed  -i 's/\\/ /g' $tmp_file &&
 # sed -r -i "s,([^']*)'([A-Z1-9\ ]+)'([^']*),\1SUB_DEPENDENCIES\3,g" $tmp_file &&
 
 # cat $tmp_file
-echo "lets check files"
+echo "lets check spells"
 while read file depends spell leftover1 leftover2 leftover3; do
 
   # we need one extra hack for spells that have strange DEPENDS lines like:
@@ -151,13 +169,6 @@ while read file depends spell leftover1 leftover2 leftover3; do
    
 done < $tmp_file
 
-rm $tmp_file
-
-# report spells with problems
-if [[ $depends_bug -lt 1 ]];then
-  echo "No bogus dependency found in $grimoire_dir"
-else
-  echo "The following spells have bogus dependency in their DEPENDS:"
-  echo "$spells_with_bugs"
-fi
+# now lets exit script
+clean_exit
 
