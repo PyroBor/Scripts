@@ -34,7 +34,10 @@ echo -e "$usage"
 #---
 ## list of all kde4_spells
 #---
-kde47_spells="$kde47_core blinken cantor kde-wallpapers gwenview4 kalgebra kalzium kamera kanagram kate kbruch kcolorchooser kde-baseapps"
+kde47_core="kde4-l10n kdebase4  kdebase4-runtime kdebase-workspace4 kdeaccessibility4 kdeadmin4 kdeartwork4"
+kde47_core="$kde47_core kdelibs4 kdemultimedia4 kdegames4 kdenetwork4 kdepim4 kdepim4-runtime kdepimlibs4"
+kde47_core="$kde47_core kdeplasmoids4 kdesdk4 kdetoys4 kdeutils4 kdewebdev4 oxygen-icons"
+kde47_spells="$kde47_core blinken cantor kde-wallpapers gwenview4 kalgebra kalzium kamera kanagram kate kbruch kcolorchooser"
 kde47_spells="$kde47_spells  kdegraphics-strigi-analyzer kdegraphics-thumbnailers "
 kde47_spells="$kde47_spells  kgamma kgeography khangman kig kimono kiten klettres kmplot kolourpaint konsole"
 kde47_spells="$kde47_spells korundum kross-interpreters kruler ksaneplugin ksnapshot kstars ktouch kturtle kwordquiz"
