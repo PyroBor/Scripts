@@ -1,0 +1,70 @@
+#!/bin/bash
+# by Bor Kraljič <pyrobor[at]ver[dot]si>
+#
+#
+# mass edit all spells in grimoire or section
+#
+. /etc/sorcery/config
+
+
+# paste data even if we interupt withc ctrl-c :)
+trap 'message "${PROBLEM_COLOR}control-c${DEFAULT_COLOR}"; nice_exit 1' INT
+
+function show_usage() {
+usage="${MESSAGE_COLOR}Usage: ${SPELL_COLOR}$(basename $0) ${FILE_COLOR}spell(s)
+${MESSAGE_COLOR} -s, --section <section> for whole section
+ -g, --grimoire <grimoire> for whole grimoire
+ -h, --help\t\t show this help ${DEFAULT_COLOR}"
+message "$usage"
+}
+
+function nice_exit() {
+  local exit_status=$1
+  exit $exit_status
+}
+
+## Parse the command line parameters and arguments via getopt
+TEMP_OPTS=$(getopt -o 's:g:h' -l 'section:,grimoire:,help' \
+-n "$(basename $0)" -- "$@")
+if [[ $? != 0 ]]; then  show_usage; exit 3; fi
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP_OPTS"
+unset TEMP_OPTS
+
+
+while true; do
+  case "$1" in
+     "-s"|"--section")  wanted_spells=$(codex_get_spells_in_section $(codex_find_section_by_name $2)|cut -f8 -d/);      shift 2;;
+     "-g"|"--grimoire")  wanted_spells=$(codex_get_all_spells $(codex_find_grimoire $2)| cut -f8 -d/);          shift 2;;
+     "-h"|"--help") show_usage; exit 2 ;;
+     --) shift ; break ;;
+     *) show_usage; exit 3 ;;
+  esac
+done
+
+
+if [[ $wanted_spells == "" ]]; then
+  wanted_spells="$@"
+fi
+
+checked=1
+total_spells=$(echo $wanted_spells| wc -w)
+for spell in $wanted_spells; do
+  set_term_title "Fixing $spell  ($checked of $total_spells)"
+  message -n "${MESSAGE_COLOR}Fixing ${SPELL_COLOR}$spell${MESSAGE_COLOR}:"
+  (
+    mass_quill_update.sh -l $spell
+  )
+  subshell_rc=$?
+
+  if [[ $subshell_rc != 0 ]]; then
+    failed_spells="$failed_spells $spell"
+    message "done"
+  else
+    message "\t${QUERY_COLOR}Done.${DEFAULT_COLOR}"
+  fi
+  checked=$(( $checked + 1 ))
+done
+
+nice_exit 0
+
