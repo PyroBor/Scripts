@@ -4,33 +4,48 @@
 ## Licence is GPL v2 or higher
 ##
 ## copy spells from git to grimoire
+## or back
 ##
-## TODO
-## - add param to set git_dir &grimoire
-## - maybe remove run_as_root since is only from patch sorcery bug #15421
-## - option to copy from grimoire to git_dir
 #---
 
-. /etc/sorcery/config
-if  [  "$UID"  !=  0  ];  then
-  PARAMS=$(consolidate_params "$@")
-  run_as_root copy_spells_git2grim.sh "$PARAMS"
-fi
+#---
+## show help
+#---
+function show_usage() {
+usage="Usage: $(basename $0) spell(s)
+-r, --reverse\t copy spells from grimoire to git
+\t-h, --help\t show this help"
+
+echo -e "$usage"
+}
+
+TEMP_OPTS=$(getopt -o 'rh' -l 'reverse,help' -n "$(basename $0)" -- "$@")
+if [[ $? != 0 ]]; then  show_usage; exit 3; fi
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP_OPTS"
+unset TEMP_OPTS
+
+
+while true; do
+  case "$1" in
+   "-r"|"--reverse")  mode="reverse";     shift ;;
+   "-h"|"--help")     show_usage;      exit 2 ;;
+   --)                shift;           break ;;
+   -*)                 show_usage;      exit 3 ;;
+  esac
+done
 
 
 copy_spells="$@"
-git_dir="/home/bor/git/grimoire"
-grimoire_path="/var/lib/sorcery/codex/test"
 
-for spell in $copy_spells; do
-  section=$(codex_get_spell_section_name $spell)
-  if [[ $section ==  "" ]]; then
-    section_path=$(find $git_dir -iname openshot)
-    section_path=${section_path/$git_dir/}
-    section=$(echo $section_path |cut -d/ -f2)
-  fi
-  mkdir -p  $grimoire_path/$section/$spell/ &&
-  rm -r $grimoire_path/$section/$spell/* &&
-  cp -fR $git_dir/$section/$spell/* $grimoire_path/$section/$spell/ &&
-  message "copied $git_dir/$section/$spell/* $grimoire_path/$section/$spell/"
-done
+if [[ $mode == "reverse" ]]; then
+  for spell in $copy_spells; do
+    quill -u $spell <<<"0ad" &> /dev/null &&
+    echo "Copied $spell from grimoire to git with quill"
+  done
+else
+  for spell in $copy_spells; do
+    quill -u $spell <<<"1bd" &> /dev/null &&
+    echo "Copied $spell from git to grimoire with quill"
+  done
+fi
