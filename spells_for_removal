@@ -1,0 +1,120 @@
+#!/bin/bash
+# by Bor Kraljič <pyrobor[at]ver[dot]si>
+#
+#
+
+# lets get sorcery goodies :)
+. /etc/sorcery/config
+
+
+# based on http://dbaspot.com/shell/373046-date-comparison-bash.html
+# tells how many day is from that date givem by param to today
+days4expir() {
+  echo $(( ($(date -d $1 +%s)- $(date +%s)) / (24*3600) ))
+}
+
+# paste data even if we interupt withc ctrl-c :)
+trap 'message "${PROBLEM_COLOR}control-c${DEFAULT_COLOR}"; nice_exit 1' INT
+
+function show_usage() {
+usage="${MESSAGE_COLOR}Usage: ${SPELL_COLOR}$(basename $0) ${FILE_COLOR}spell(s)
+${MESSAGE_COLOR} -d, --days <no days> search for spells deprecated longer then X days
+ -s, --section <section> for whole section
+ -g, --grimoire <grimoire> for whole grimoire
+ -h, --help\t\t show this help ${DEFAULT_COLOR}"
+message "$usage"
+}
+
+function nice_exit() {
+  local exit_status=$1
+  message "Deprecated spells for removal ($(echo $failed_spells| wc -w)):"
+  message "${DEFAULT_COLOR}$failed_spells"
+  exit $exit_status
+}
+
+## Parse the command line parameters and arguments via getopt
+TEMP_OPTS=$(getopt -o 'd:s:g:h' -l 'days:,section:,grimoire:,help' \
+-n "$(basename $0)" -- "$@")
+if [[ $? != 0 ]]; then  show_usage; exit 3; fi
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP_OPTS"
+unset TEMP_OPTS
+
+
+while true; do
+  case "$1" in
+     "-s"|"--section")  wanted_spells=$(codex_get_spells_in_section $(codex_find_section_by_name $2)|cut -f8 -d/);      shift 2;;
+     "-g"|"--grimoire")  wanted_spells=$(codex_get_all_spells $(codex_find_grimoire $2)| cut -f8 -d/);          shift 2;;
+     "-d"|"--days") cut_period_days="$2" ; shift 2 ;;
+     "-h"|"--help") show_usage; exit 2 ;;
+     --) shift ; break ;;
+     *) show_usage; exit 3 ;;
+  esac
+done
+
+# two stable releases... 180 should be more than enough
+# we need "-" since we search back in time
+cut_period_days="-${cut_period_days:180}"
+
+
+if [[ $wanted_spells == "" ]]; then
+  wanted_spells="$@"
+fi
+
+checked=1
+total_spells=$(echo $wanted_spells| wc -w)
+for spell in $wanted_spells; do
+  set_term_title "checking $spell  ($checked of $total_spells)"
+#   message -n "${MESSAGE_COLOR}Checking ${SPELL_COLOR}$spell${MESSAGE_COLOR}:"
+  (
+    codex_set_current_spell_by_name $spell
+    if [[ $VERSION == "0" ]] || [[ $VERSION =~ (DEAD|dead|deprecated|DEPRECATED) ]] ;then
+      message -n "${SPELL_COLOR}$spell${MESSAGE_COLOR} is deprecated..."
+      deprecated_line_no=$(gaze history $spell |grep deprecat -n |head -n1|cut -d: -f1)
+      possible_date_line_no=$(( $deprecated_line_no - 1 ))
+      
+      ## rpmunpack has version=0 and it is still ok...
+      if [[ $deprecated_line_no == "" ]] && [[ $VERSION == "0" ]] ;then
+       message " guess not..."
+       exit 0
+      elif [[ $deprecated_line_no == "" ]]; then
+       # version is =~ (DEAD|dead|deprecated|DEPRECATED)
+       # so just lets just take the last HISTORY entry
+       possible_date_line_no=3
+      fi
+
+
+      # lets search for line backwards from first mentioning deprecated in history
+      until [[ $possible_date_line_no == 0 ]] || [[ $date_found == 1 ]]; do
+        possible_date=$(gaze history $spell | sed  -n "$possible_date_line_no p" |cut -d" " -f1)
+        if grep -q "^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$" <<< $possible_date ;then
+          date_found=1
+        fi
+        possible_date_line_no=$(( $possible_date_line_no - 1 ))
+      done
+
+      if [[ $possible_date_line_no == 0 ]] && [[ $date_found == 0 ]]; then
+        message "correct date not found..."
+        exit 0
+      fi
+      if [[ $(days4expir $possible_date) -lt $cut_period_days ]]; then
+        message -n " over ${cut_period_days/-/} days ago!"
+        exit 1
+      else
+        message "${QUERY_COLOR} not long ago!"
+      fi
+    fi
+  )
+  subshell_rc=$?
+
+  if [[ $subshell_rc != 0 ]]; then
+    failed_spells="$failed_spells $spell"
+    message " ${QUERY_COLOR}added to list."
+#   else
+#     message " ${QUERY_COLOR}still ok.${DEFAULT_COLOR}"
+  fi
+  checked=$(( $checked + 1 ))
+done
+
+nice_exit 0
+
