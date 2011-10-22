@@ -118,7 +118,7 @@ function check_web_site() {
 #      return 1
 #   }
 
-  if [[ "$checking_url" == "" ]]; then
+  if [[ ! $checking_url ]]; then
     return 1
   fi
   
@@ -218,15 +218,15 @@ done
 
 
 # do we have anything to do:)
-if [[ $grimoire == "" ]] && [[ $section == "" ]]; then
+if [[ ! $grimoire ]] && [[ ! $section ]]; then
   message "${PROBLEM_COLOR}nothing chosen. please specify -g or -s${DEFAULT_COLOR}"
   safe_exit 1
-elif [[ $grimoire != "" ]] && [[ $section != "" ]]; then
+elif [[ $grimoire ]] && [[ $section ]]; then
   message "${PROBLEM_COLOR}grimoire OR selection${DEFAULT_COLOR}"
   safe_exit 1
 fi
 
-if [[ $email == "" ]]; then
+if [[ ! $email ]]; then
   email_report="no"
 fi
 
@@ -248,7 +248,7 @@ fi
 # reporting the success or failure to the terminal (and mail)
 
 failed_files=$(ls $$.*.failed 2>/dev/null)
-if [[ $failed_files != "" ]]; then
+if [[ $failed_files ]]; then
   number_of_fails=$(cat $failed_files | wc -l)
   if [[ $email_report == "yes" ]]; then
      message "Failed spells ($number_of_fails): \n\n$(cat $failed_files | sort)" | mail -s "$(basename $0)-$$: $report_title FAILLURE report" -- $email
