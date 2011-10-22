@@ -69,7 +69,7 @@ while true; do
   esac
 done
 
-if [[ $spells == "" ]]; then
+if [[ ! $spells ]]; then
   spells="$@"
 fi
 
