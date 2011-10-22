@@ -150,7 +150,7 @@ function upstream_check() {
                        # we need to get rid of that sum if it is there
     calc_hash=$(${sort_of_hash//sum/}sum /var/spool/sorcery/$SOURCE |cut -d" " -f1)
   
-  if [[ $calc_hash == $upstream_hash ]] && [[ $upstream_hash != "" ]]; then
+  if [[ $calc_hash == $upstream_hash ]] && [[ $upstream_hash ]]; then
     message "source verified"
     true
   else
