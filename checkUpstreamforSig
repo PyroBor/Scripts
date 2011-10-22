@@ -19,7 +19,7 @@ message "$usage"
 
 function nice_exit() {
   local exit_status=$1
-  if [[ $possible_spells == "" ]]; then
+  if [[ ! $possible_spells ]]; then
     message "${MESSAGE_COLOR}All spells are using upstream signature if it is available!${DEFAULT_COLOR}"
     set_term_title "nothing:)"
   else
@@ -52,7 +52,7 @@ while true; do
 done
 
 
-if [[ $wanted_spells == "" ]]; then
+if [[ ! $wanted_spells ]]; then
   wanted_spells="$@"
 fi
 
@@ -64,7 +64,7 @@ for spell in $wanted_spells; do
    (
      codex_set_current_spell_by_name $spell
 
-     if [[ $SOURCE_URL == "" ]];then
+     if [[ ! $SOURCE_URL ]];then
       exit 5
      fi
 
