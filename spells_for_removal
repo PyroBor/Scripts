@@ -57,7 +57,7 @@ done
 cut_period_days="-${cut_period_days:180}"
 
 
-if [[ $wanted_spells == "" ]]; then
+if [[ ! $wanted_spells ]]; then
   wanted_spells="$@"
 fi
 
@@ -74,10 +74,10 @@ for spell in $wanted_spells; do
       possible_date_line_no=$(( $deprecated_line_no - 1 ))
       
       ## rpmunpack has version=0 and it is still ok...
-      if [[ $deprecated_line_no == "" ]] && [[ $VERSION == "0" ]] ;then
+      if [[ ! $deprecated_line_no ]] && [[ $VERSION == "0" ]] ;then
        message " guess not..."
        exit 0
-      elif [[ $deprecated_line_no == "" ]]; then
+      elif [[ ! $deprecated_line_no ]]; then
        # version is =~ (DEAD|dead|deprecated|DEPRECATED)
        # so just lets just take the last HISTORY entry
        possible_date_line_no=3
