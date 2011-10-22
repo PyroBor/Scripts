@@ -74,7 +74,7 @@ function search_gpg_key() {
   do
     first_found=$(gpg --batch --list-options show-keyring $gpg_keyring \
                   2> /dev/null |grep "$key_to_search"|head -n1)
-    if [[ $first_found != "" ]];then
+    if [[ $first_found ]];then
       echo -n "$key_to_search: $gpg_keyring: "
       echo $first_found
       let found_status++
