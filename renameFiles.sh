@@ -92,7 +92,7 @@ function get_subtitles (){
     echo "there are allready one subtitles go with --subtitleOW to overwrite"
   else
     download_link=$($elinks -source "http://www.sub-titles.net/sl/ppodnapisi/search?tbsl=3&asdp=1&sK=$seria&sJ=$lang&sTS=$season&sTE=$episode&sO=asc&sS=time" |grep -m1 -E -o  "/sl/ppodnapisi/podnapis/i/[0-9a-Z/-]*")
-    if [[ "$download_link" != "" ]]; then
+    if [[ $download_link ]]; then
       wget -q  "http://www.sub-titles.net$download_link"
       unzip -qq *.zip
       srt_file=$(find ./ -iname "*.srt" |head -n1)
@@ -150,7 +150,7 @@ while true; do
 done
 
 
-if [[ $format != "" ]]; then
+if [[ $format ]]; then
   case "$format" in
   "1") newname_format='$seria ${season}x$zeroepisode $episode_title' ;;
   "2") newname_format='$seria ${season}x$episode $episode_title' ;;
@@ -169,7 +169,7 @@ WORKING_DIR="$wanted_dir"
 maketmpdir
 
 
-if [[ "$selected_files" != "" ]]; then
+if [[ $selected_files ]]; then
   unset selection_of_files
 fi
 
