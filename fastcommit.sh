@@ -208,7 +208,7 @@ for changed_spell_path in $changed_spells_path_list; do
     sed -i -e 's/^[\t]*//' $temp_history # remove leading tab
     # if first isn't * there is need to add the first file change
     # ofcourse if we have it...
-    if [[ $(head -c 1 $temp_history) != "*" ]] && [[ $first_file_changed != "" ]]; then
+    if [[ $(head -c 1 $temp_history) != "*" ]] && [[ $first_file_changed ]]; then
       sed -i "1 s/^[ ]/* $first_file_changed/" $temp_history
     fi
     #### this could get ugly if we have 2 changes that doesn't have file names in lines...
@@ -236,7 +236,7 @@ done
 
 ###### FILE COMMIT LOOP
 # do we even want this. and we really need changelog changed for this. 
-if [[ $filecommit_mode == yes ]] &&  [[ $(git diff ChangeLog) != "" ]]; then
+if [[ $filecommit_mode == yes ]] &&  [[ $(git diff ChangeLog) ]]; then
   # lets get list of files in sections and top dir that are changed
   changed_files_path_list=$(git diff --numstat |sed -e "s/[0-9-]*[\t]*[0-9-]*[\t]*//g")
   for changed_file_path in $changed_files_path_list ; do
@@ -274,7 +274,7 @@ if [[ $filecommit_mode == yes ]] &&  [[ $(git diff ChangeLog) != "" ]]; then
 fi
 
 ##### end part
-if [[ $(git log origin..@{0}) == "" ]];then
+if [[ ! $(git log origin..@{0}) ]];then
   echo "Nothing is commited."
 else
   echo "Use 'git log -p origin..@{0}' to check changes before pushing them..."
